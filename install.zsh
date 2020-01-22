@@ -40,8 +40,10 @@ if  [ -f ~/.zshrc ]; then
 fi
 cp $TMPFOLDER/.zshrc ~/
 
+
 # Terminal.app theme
 echo "Installing Terminal theme..."
+sleep 3 # wait a bit, otherwise ~/.zplug doesn't seem to be ready
 open $TMPFOLDER/Snazzy\ Custom.terminal
 defaults write com.apple.Terminal "Default Window Settings" -string "Snazzy Custom"
 defaults write com.apple.Terminal "Startup Window Settings" -string "Snazzy Custom"
