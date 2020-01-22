@@ -1,3 +1,3 @@
 Install using:
 
-```curl -sL --proto-redir -all,https https://raw.githubusercontent.com/StudioProcess/zsh-config/master/install.zsh | zsh```
+```curl -sL -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/StudioProcess/zsh-config/master/install.zsh | zsh```
