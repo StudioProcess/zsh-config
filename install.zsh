@@ -5,8 +5,8 @@ TMPFOLDER="/tmp/zsh-setup-$$$RANDOM"
 mkdir $TMPFOLDER
 # echo $TMPFOLDER
 
-# git clone https://github.com/StudioProcess/zsh-setup $TMPFOLDER
-cp ./*(DN) $TMPFOLDER > /dev/null
+git clone https://github.com/StudioProcess/zsh-config $TMPFOLDER
+#cp ./*(DN) $TMPFOLDER > /dev/null 2>&1 # for local testing only
 
 # install homebrew
 # if ! type "brew" > /dev/null; then
