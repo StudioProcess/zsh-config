@@ -65,10 +65,11 @@ export EDITOR='atom'
 
 
 # ALIASES
-if type 'ccat' > /dev/null; then
+alias ls='ls -G' # colored ls
+if type 'ccat' > /dev/null; then # colored cat (if available)
   alias cat=ccat
 fi
-if type 'cless' > /dev/null; then
+if type 'cless' > /dev/null; then # colored less (if available)
   alias less=cless
 fi
 
