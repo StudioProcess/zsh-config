@@ -16,6 +16,24 @@ source ~/.zplug/init.zsh
 zplug mafredri/zsh-async, from:github
 zplug sindresorhus/pure, use:pure.zsh, from:github, as:theme
 
+# For color indices, see: https://en.wikipedia.org/wiki/Xterm#/media/File:Xterm_256color_chart.svg
+# zstyle :prompt:pure:execution_time color yellow
+# zstyle :prompt:pure:git:arrow color cyan
+# zstyle :prompt:pure:git:branch color 242
+# zstyle :prompt:pure:git:branch:cached color red
+# zstyle :prompt:pure:git:action color 242
+# zstyle :prompt:pure:git:dirty color 218
+# zstyle :prompt:pure:host color 242
+# zstyle :prompt:pure:path color blue
+# zstyle :prompt:pure:prompt:error color red
+# zstyle :prompt:pure:prompt:success color magenta
+# zstyle :prompt:pure:prompt:continuation color 242
+# zstyle :prompt:pure:prompt:user color 242
+# zstyle :prompt:pure:prompt:user:root color default
+# zstyle :prompt:pure:prompt:virtualenv color 242
+# PURE_PROMPT_SYMBOL='❯'
+# PURE_PROMPT_VICMD_SYMBOL='❮'
+
 # oh-my-zsh plugins
 # zplug "plugins/brew", from:oh-my-zsh
 zplug "plugins/colored-man-pages", from:oh-my-zsh
