@@ -50,6 +50,9 @@ zplug "plugins/z", from:oh-my-zsh
 zplug "zsh-users/zsh-syntax-highlighting"
 zplug "zsh-users/zsh-autosuggestions"
 
+zplug "MichaelAquilina/zsh-autoswitch-virtualenv"
+export AUTOSWITCH_VIRTUAL_ENV_DIR="./venv" # store virtualenvs in each project folder
+
 if ! zplug check --verbose; then
   zplug install
 fi
@@ -100,7 +103,7 @@ function new () {
     sed -i '' 's/1.0.0/0.1.0/g' package.json
     sed -i '' 's/ISC/AGPL-3.0/g' package.json
     sed -i '' "s#\"author\": \"\"#\"author\": \"$AUTHOR_STRING\"#g" package.json
-    echo "node_modules\n.DS_Store\nvenv" > .gitignore
+    echo "node_modules\n.DS_Store\nvenv\n.venv" > .gitignore
     git init 1>/dev/null
   fi
 }
