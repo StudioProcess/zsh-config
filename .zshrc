@@ -57,6 +57,9 @@ fi
 zplug load
 
 
+# OPTIONS
+setopt auto_cd # cd by just typing the folder name
+# setopt auto_pushd pushd_ignore_dups setopt pushd_minus
 
 # VARIABLES
 export PATH=/Users/$USER/Library/Python/3.7/bin:$PATH # add pip3 user folder to path (for pygmentize)
