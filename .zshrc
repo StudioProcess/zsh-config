@@ -100,7 +100,7 @@ function new () {
     sed -i '' 's/1.0.0/0.1.0/g' package.json
     sed -i '' 's/ISC/AGPL-3.0/g' package.json
     sed -i '' "s#\"author\": \"\"#\"author\": \"$AUTHOR_STRING\"#g" package.json
-    echo 'node_modules' > .gitignore
+    echo "node_modules\n.DS_Store\nvenv" > .gitignore
     git init 1>/dev/null
   fi
 }
