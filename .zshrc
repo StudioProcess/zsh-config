@@ -101,8 +101,16 @@ function new () {
     cd $1
     npm init -y 1>/dev/null
     sed -i '' 's/1.0.0/0.1.0/g' package.json
-    sed -i '' 's/ISC/AGPL-3.0/g' package.json
     sed -i '' "s#\"author\": \"\"#\"author\": \"$AUTHOR_STRING\"#g" package.json
+    sed -i '' 's/ISC"/AGPL-3.0",/g' package.json
+    node=$(node -v); node="${node:1}" # remove first character ('v') from version string
+    # add engines field with current versions of node and npm
+    sed -i '' '$i\
+      \ \ "engines": {\
+      \ \ \ \ "node": "'$node'",\
+      \ \ \ \ "npm": "'$(npm -v)'"\
+      \ \ }\
+      ' package.json
     echo "node_modules\n.DS_Store\nvenv\n.venv" > .gitignore
     git init 1>/dev/null
   fi
