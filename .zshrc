@@ -100,6 +100,7 @@ function new () {
   if [ $? -eq 0 ]; then
     cd $1
     npm init -y 1>/dev/null
+    sed -i '' 's/"main": "index.js"/"private": true/g' package.json
     sed -i '' 's/1.0.0/0.1.0/g' package.json
     sed -i '' "s#\"author\": \"\"#\"author\": \"$AUTHOR_STRING\"#g" package.json
     sed -i '' 's/ISC"/AGPL-3.0",/g' package.json
