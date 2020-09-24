@@ -1,10 +1,10 @@
-# 2020-01-21
+# 2020-09-24, 2020-09-18, 2020-01-21
 # Plugin selection mainly from:
 # https://medium.com/@ahadsheriff/how-to-get-a-better-development-experience-on-your-mac-8478be58bba4
 #
 # Requirements
 # zplug: curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh
-# pygments (for colorize): pip3 install pygments --user
+# pygments (for colorize): brew install python && pip3 install pygments
 
 
 
@@ -64,8 +64,10 @@ zplug load
 setopt auto_cd # cd by just typing the folder name
 # setopt auto_pushd pushd_ignore_dups setopt pushd_minus
 
+
 # VARIABLES
-export PATH=/Users/$USER/Library/Python/3.8/bin:$PATH # add pip3 user folder to path (for pygmentize)
+# not needed when Pygments is installed via homebrew pip3
+# export PATH=/Users/$USER/Library/Python/3.8/bin:$PATH # add pip3 user folder to path (for pygmentize)
 export EDITOR='atom'
 
 
@@ -124,3 +126,6 @@ function quote () {
 	WHO=$(echo "$Q" | sed -e 's/.*\/quotes\///g' -e 's/<.*//g' -e 's/.*">//g') 
 	[[ -n "$WHO" && -n "$TXT" ]] && echo "\"${TXT}\"\n\t-${WHO}"
 }
+
+# Show quote when logging in
+echo; quote
