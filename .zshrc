@@ -127,5 +127,15 @@ function quote () {
 	[[ -n "$WHO" && -n "$TXT" ]] && echo "\"${TXT}\"\n\t-${WHO}"
 }
 
-# Show quote when logging in
-echo; quote
+function motd () {
+  TD=$(date -r ~/.motd +%s) # touch date in seconds
+  MD=$(date -v 0H -v 0M -v 0S +%s) # midnight date in seconds
+  if (( TD < MD )); then
+    # todo: handle timeout of quote
+    quote > ~/.motd # get new quote and save it
+  fi
+  /bin/cat ~/.motd
+}
+
+# Show motd when logging in
+echo; motd
