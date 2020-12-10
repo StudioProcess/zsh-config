@@ -128,7 +128,7 @@ function quote () {
 }
 
 function motd () {
-  TD=$(date -r ~/.motd +%s) # touch date in seconds
+  TD=$(date -r ~/.motd +%s 2>/dev/null || echo 0) # touch date in seconds (or 0 if date fails i.e. file doesn't exit)
   MD=$(date -v 0H -v 0M -v 0S +%s) # midnight date in seconds
   if (( TD < MD )); then
     # todo: handle timeout of quote
