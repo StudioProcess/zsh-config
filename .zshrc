@@ -185,6 +185,8 @@ function switchvenv_init() {
 
 # Check Node, Python and Homebrew for outdated versions
 function outdated () {
+    FN_NAME=$0
+    
     ## node
     function out_node() {
         echo "Node"
@@ -265,11 +267,13 @@ function outdated () {
     }
     
     function out_all() {
-        out_node
-        out_python
-        out_npm
-        out_pip
-        out_brew
+        out_node; out_python; out_npm; out_pip; out_brew
+    }
+    
+    function usage() {
+        echo "Usage:"
+        echo "  Check all:       $FN_NAME"
+        echo "  Check specific:  $FN_NAME node|python|py|npm|pip|homebrew|brew|all"
     }
     
     if [[ $1 == "node" ]] ; then
@@ -282,8 +286,10 @@ function outdated () {
         out_pip
     elif [[ $1 == "homebrew" || $1 == "brew" ]]; then
         out_brew
-    else
+    elif [[ $1 == "all" || -z "$1" ]]; then
         out_all
+    else
+        usage
     fi  
 }
 
