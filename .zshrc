@@ -1,4 +1,4 @@
-# 2020-09-24, 2020-09-18, 2020-01-21
+# 2020-09-24, 2020-09-18, 2020-01-21, 2022-03-09
 # Plugin selection mainly from:
 # https://medium.com/@ahadsheriff/how-to-get-a-better-development-experience-on-your-mac-8478be58bba4
 #
@@ -14,7 +14,7 @@ source ~/.zplug/init.zsh
 
 # pure prompt
 zplug mafredri/zsh-async, from:github
-zplug sindresorhus/pure, use:pure.zsh, from:github, as:theme
+zplug sindresorhus/pure, use:pure.zsh, from:github, as:theme, defer:0
 
 # For color indices, see: https://en.wikipedia.org/wiki/Xterm#/media/File:Xterm_256color_chart.svg
 # zstyle :prompt:pure:execution_time color yellow
@@ -39,19 +39,24 @@ zplug sindresorhus/pure, use:pure.zsh, from:github, as:theme
 zplug "plugins/colored-man-pages", from:oh-my-zsh
 zplug "plugins/colorize", from:oh-my-zsh
 zplug "plugins/common-aliases", from:oh-my-zsh
-zplug "plugins/cp", from:oh-my-zsh
-zplug "plugins/git", from:oh-my-zsh
+  #zplug "plugins/cp", from:oh-my-zsh
+# zplug "plugins/git", from:oh-my-zsh
 # zplug "plugins/node", from:oh-my-zsh
 # zplug "plugins/npm", from:oh-my-zsh
-zplug "plugins/sudo", from:oh-my-zsh
+# zplug "plugins/sudo", from:oh-my-zsh
 # zplug "plugins/yarn", from:oh-my-zsh
-zplug "plugins/z", from:oh-my-zsh
+# zplug "plugins/z", from:oh-my-zsh
 
 zplug "zsh-users/zsh-syntax-highlighting"
 zplug "zsh-users/zsh-autosuggestions"
 
 zplug "MichaelAquilina/zsh-autoswitch-virtualenv"
+# export AUTOSWITCH_VIRTUAL_ENV_DIR="./venv" # store virtualenvs in each project folder
+
+  #zplug "~/code/zsh-autoswitch-virtualenv", from:local, defer:1
 export AUTOSWITCH_VIRTUAL_ENV_DIR="./venv" # store virtualenvs in each project folder
+# export AUTOSWITCH_VIRTUAL_ENV_DIR="." # store virtualenvs in each project folder
+# export AUTOSWITCH_VIRTUAL_ENV_NAME="venv"
 
 if ! zplug check --verbose; then
   zplug install
@@ -116,6 +121,7 @@ function new () {
       ' package.json
     echo "node_modules\n.DS_Store\nvenv\n.venv" > .gitignore
     git init 1>/dev/null
+    sed -i '' 's/master/main/g' .git/HEAD # rename master to main
   fi
 }
 
@@ -139,3 +145,20 @@ function motd () {
 
 # Show motd when logging in
 echo; motd
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/Users/mlg/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/Users/mlg/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/Users/mlg/miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/Users/mlg/miniconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+export PATH="/usr/local/sbin:$PATH"
