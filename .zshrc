@@ -76,10 +76,11 @@ alias edit="$EDITOR"
 # FUNCTIONS
 CODE_FOLDER=~/code # don't quote so tilde gets expanded
 function code () {
-    if (( $# == 0 )); then # of args is empty (length zero?)
+    if (( $# == 0 )); then
+        # of args is empty (length zero?)
         1=10
-      fi
-      cd $CODE_FOLDER; ls -t | head -n $1 | column;
+    fi
+    cd $CODE_FOLDER; ls -t | head -n $1 | column;
 }
 
 AUTHOR_STRING='Martin Grödl <martin@process.studio> (https://process.studio)'
@@ -107,11 +108,11 @@ function new () {
 }
 
 function quote () {
-  emulate -L zsh
-  Q=$(curl -s --connect-timeout 1 "http://www.quotationspage.com/random.php" | iconv -c -f ISO-8859-1 -t UTF-8 | grep -m 1 "dt ") 
-  TXT=$(echo "$Q" | sed -e 's/<\/dt>.*//g' -e 's/.*html//g' -e 's/^[^a-zA-Z]*//' -e 's/<\/a..*$//g') 
-  WHO=$(echo "$Q" | sed -e 's/.*\/quotes\///g' -e 's/<.*//g' -e 's/.*">//g') 
-  [[ -n "$WHO" && -n "$TXT" ]] && echo "\"${TXT}\"\n\t-${WHO}"
+    emulate -L zsh
+    Q=$(curl -s --connect-timeout 1 "http://www.quotationspage.com/random.php" | iconv -c -f ISO-8859-1 -t UTF-8 | grep -m 1 "dt ") 
+    TXT=$(echo "$Q" | sed -e 's/<\/dt>.*//g' -e 's/.*html//g' -e 's/^[^a-zA-Z]*//' -e 's/<\/a..*$//g') 
+    WHO=$(echo "$Q" | sed -e 's/.*\/quotes\///g' -e 's/<.*//g' -e 's/.*">//g') 
+    [[ -n "$WHO" && -n "$TXT" ]] && echo "\"${TXT}\"\n\t-${WHO}"
 }
 
 # https://gist.github.com/jaytaylor/6527607
@@ -217,50 +218,50 @@ function outdated () {
     
     ## npm
     function out_npm() {
-      echo "\nnpm"
-      echo   "-------------------"
-      npm_out=$(npm out -g)
-      if [[ -z "$npm_out" ]]; then
-          echo "✅"
-      else
-          echo $npm_out
-          # echo "🔄 Update with \`npm i -g <package>\`"
-          npm_out=`echo "$npm_out" | tail -f -n +2` # remove header (1 line)
-          npm_out=`echo "$npm_out" | sed -e 's/[[:space:]].*$//'` # only keep first part of each line
-          npm_out=`echo "$npm_out" | xargs` # contract to arg list
-          echo "🔄 Update with \`npm i -g $npm_out\`"
-      fi
+        echo "\nnpm"
+        echo   "-------------------"
+        npm_out=$(npm out -g)
+        if [[ -z "$npm_out" ]]; then
+            echo "✅"
+        else
+            echo $npm_out
+            # echo "🔄 Update with \`npm i -g <package>\`"
+            npm_out=`echo "$npm_out" | tail -f -n +2` # remove header (1 line)
+            npm_out=`echo "$npm_out" | sed -e 's/[[:space:]].*$//'` # only keep first part of each line
+            npm_out=`echo "$npm_out" | xargs` # contract to arg list
+            echo "🔄 Update with \`npm i -g $npm_out\`"
+        fi
     }
     
     ## pip
     function out_pip() {
-      echo "\npip"
-      echo   "-------------------"
-      pip_out=$(pyenv exec pip list --outdated)
-      if [[ -z "$pip_out" ]]; then
-          echo "✅"
-      else
-          echo $pip_out
-          # echo "🔄 Update with \`pip install --upgrade <package>\`"
-          pip_out=`echo "$pip_out" | tail -f -n +3` # remove header (2 lines)
-          pip_out=`echo "$pip_out" | sed -e 's/[[:space:]].*$//'` # only keep first part of each line
-          pip_out=`echo "$pip_out" | xargs` # contract to arg list
-          echo "🔄 Update with \`pip install --upgrade $pip_out\`"
-      fi
+        echo "\npip"
+        echo   "-------------------"
+        pip_out=$(pyenv exec pip list --outdated)
+        if [[ -z "$pip_out" ]]; then
+            echo "✅"
+        else
+            echo $pip_out
+            # echo "🔄 Update with \`pip install --upgrade <package>\`"
+            pip_out=`echo "$pip_out" | tail -f -n +3` # remove header (2 lines)
+            pip_out=`echo "$pip_out" | sed -e 's/[[:space:]].*$//'` # only keep first part of each line
+            pip_out=`echo "$pip_out" | xargs` # contract to arg list
+            echo "🔄 Update with \`pip install --upgrade $pip_out\`"
+        fi
     }
     
     ## homebrew
     function out_brew() {
-      echo "\nHomebrew"
-      echo   "-------------------"
-      brew update --quiet
-      brew_out=$(brew outdated)
-      if [[ -z "$brew_out" ]]; then
-          echo "✅"
-      else
-          echo $brew_out
-          echo "🔄 Update with \`brew upgrade\`"
-      fi
+        echo "\nHomebrew"
+        echo   "-------------------"
+        brew update --quiet
+        brew_out=$(brew outdated)
+        if [[ -z "$brew_out" ]]; then
+            echo "✅"
+        else
+            echo $brew_out
+            echo "🔄 Update with \`brew upgrade\`"
+        fi
     }
     
     function out_all() {
@@ -272,7 +273,7 @@ function outdated () {
     }
     
     if [[ $1 == "node" ]] ; then
-      out_node
+        out_node
     elif [[ $1 == "python" || $1 == "py" ]]; then
         out_python
     elif [[ $1 == "npm" ]]; then
@@ -282,7 +283,7 @@ function outdated () {
     elif [[ $1 == "homebrew" || $1 == "brew" ]]; then
         out_brew
     else
-      out_all
+        out_all
     fi  
 }
 
