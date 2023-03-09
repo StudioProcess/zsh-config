@@ -198,12 +198,15 @@ function outdated () {
         else
             echo "Latest LTS: $node_latest"
             echo "Current:    $node_current"
-            echo "🔄 Update with \`n lts --preserve\`"
+            export _outdated_update_node="n lts --preserve"
+            if [[ $1 != "noupcmd" ]]; then
+                echo "🔄 Update with \`$_outdated_update_node\` or \`$FN_NAME update node\`"
+            fi
         fi
     }
     
     ## python
-    function out_python() {
+    function out_py() {
         echo "\nPython"
         echo   "-------------------"
         python_current=$(pyenv version-name)
@@ -214,7 +217,10 @@ function outdated () {
         else
             echo "Latest:      $python_latest"
             echo "Current:     $python_current"
-            echo "🔄 Update with \`pyenv install $python_latest\`"
+            export _outdated_update_py="pyenv install $python_latest"
+            if [[ $1 != "noupcmd" ]]; then
+                echo "🔄 Update with \`$_outdated_update_py\` or \`$FN_NAME update python\`"
+            fi
         fi
     }
     
@@ -231,7 +237,10 @@ function outdated () {
             npm_out=`echo "$npm_out" | tail -f -n +2` # remove header (1 line)
             npm_out=`echo "$npm_out" | sed -e 's/[[:space:]].*$//'` # only keep first part of each line
             npm_out=`echo "$npm_out" | xargs` # contract to arg list
-            echo "🔄 Update with \`npm i -g $npm_out\`"
+            export _outdated_update_npm="npm i -g $npm_out"
+            if [[ $1 != "noupcmd" ]]; then
+                echo "🔄 Update with \`$_outdated_update_npm\` or \`$FN_NAME update npm\`"
+            fi
         fi
     }
     
@@ -248,13 +257,16 @@ function outdated () {
             pip_out=`echo "$pip_out" | tail -f -n +3` # remove header (2 lines)
             pip_out=`echo "$pip_out" | sed -e 's/[[:space:]].*$//'` # only keep first part of each line
             pip_out=`echo "$pip_out" | xargs` # contract to arg list
-            echo "🔄 Update with \`pip install --upgrade $pip_out\`"
+            export _outdated_update_pip="pip install --upgrade $pip_out"
+            if [[ $1 != "noupcmd" ]]; then
+                echo "🔄 Update with \`$_outdated_update_pip\` or \`$FN_NAME update pip\`" 
+            fi
         fi
     }
     
     ## homebrew
     function out_brew() {
-        echo "\nHomebrew"
+        echo "\nbrew"
         echo   "-------------------"
         brew update --quiet
         brew_out=$(brew outdated)
@@ -262,24 +274,83 @@ function outdated () {
             echo "✅"
         else
             echo $brew_out
-            echo "🔄 Update with \`brew upgrade\`"
+            export _outdated_update_brew="brew upgrade"
+            if [[ $1 != "noupcmd" ]]; then
+                echo "🔄 Update with \`$_outdated_update_brew\` or \`$FN_NAME update brew\`"
+            fi
         fi
     }
     
     function out_all() {
-        out_node; out_python; out_npm; out_pip; out_brew
+        out_node; out_py; out_npm; out_pip; out_brew
+    }
+    
+    function up_node() {
+        [[ -z "$_outdated_update_node" ]] && out_node noupcmd
+        if [[ ! -z "$_outdated_update_node" ]]; then
+            echo "🆙 Updating Node..."
+            echo "Running \`$_outdated_update_node\`"
+            eval "$_outdated_update_node"
+            export _outdated_update_node=''
+        fi
+    }
+    
+    function up_py() {
+        [[ -z "$_outdated_update_py" ]] && out_py noupcmd
+        if [[ ! -z "$_outdated_update_py" ]]; then
+            echo "🆙 Updating Python..."
+            echo "Running \`$_outdated_update_py\`"
+            eval "$_outdated_update_py"
+            export _outdated_update_py=''
+        fi
+    }
+    
+    function up_npm() {
+        [[ -z "$_outdated_update_npm" ]] && out_npm noupcmd
+        if [[ ! -z "$_outdated_update_npm" ]]; then
+            echo "🆙 Updating npm packages..."
+            echo "Running \`$_outdated_update_npm\`"
+            eval "$_outdated_update_npm"
+            export _outdated_update_npm=''
+        fi
+    }
+    
+    function up_pip() {
+        [[ -z "$_outdated_update_pip" ]] && out_pip noupcmd
+        if [[ ! -z "$_outdated_update_pip" ]]; then
+            echo "🆙 Updating pip packages..."
+            echo "Running \`$_outdated_update_pip\`"
+            eval "$_outdated_update_pip"
+            export _outdated_update_pip=''
+        fi
+    }
+    
+    function up_brew() {
+        [[ -z "$_outdated_update_brew" ]] && out_brew noupcmd
+        if [[ ! -z "$_outdated_update_brew" ]]; then
+            echo "🆙 Updating brew packages..."
+            echo "Running \`$_outdated_update_brew\`"
+            eval "$_outdated_update_brew"
+            export _outdated_update_brew=''
+        fi
+    }
+    
+    function up_all() {
+        up_node; up_py; up_npm; up_pip; up_brew
     }
     
     function usage() {
         echo "Usage:"
-        echo "  Check all:       $FN_NAME"
-        echo "  Check specific:  $FN_NAME node|python|py|npm|pip|homebrew|brew|all"
+        echo "  Check all:        $FN_NAME"
+        echo "  Check specific:   $FN_NAME [node|python|py|npm|pip|homebrew|brew|all]"
+        echo "  Update all:       $FN_NAME update|up"
+        echo "  Update specific:  $FN_NAME update|up [node|python|py|npm|pip|homebrew|brew|all]"
     }
     
     if [[ $1 == "node" ]] ; then
         out_node
     elif [[ $1 == "python" || $1 == "py" ]]; then
-        out_python
+        out_py
     elif [[ $1 == "npm" ]]; then
         out_npm
     elif [[ $1 == "pip" ]]; then
@@ -288,6 +359,22 @@ function outdated () {
         out_brew
     elif [[ $1 == "all" || -z "$1" ]]; then
         out_all
+    elif [[ $1 == "update" || $1 == "up" ]]; then
+        if [[ $2 == "node" ]]; then
+            up_node
+        elif [[ $2 == "python" || $2 == "py" ]]; then
+            up_py
+        elif [[ $2 == "npm" ]]; then
+            up_npm
+        elif [[ $2 == "pip" ]]; then
+            up_pip
+        elif [[ $2 == "homebrew" || $2 == "brew" ]]; then
+            up_brew
+        elif [[ $2 == "all" || -z "$2" ]]; then
+            up_all
+        else
+            usage
+        fi
     else
         usage
     fi  
