@@ -189,7 +189,7 @@ function outdated () {
     
     ## node
     function out_node() {
-        echo "Node"
+        echo "node"
         echo "-------------------"
         node_current=${"$(node -v)":1} # remove leading 'v'
         node_latest=$(n lsr lts)
@@ -207,7 +207,7 @@ function outdated () {
     
     ## python
     function out_py() {
-        echo "\nPython"
+        echo "\npython"
         echo   "-------------------"
         python_current=$(pyenv version-name)
         ## latest (without characters other than digits and .) Note: xargs trims the string
@@ -288,7 +288,7 @@ function outdated () {
     function up_node() {
         [[ -z "$_outdated_update_node" ]] && out_node noupcmd
         if [[ ! -z "$_outdated_update_node" ]]; then
-            echo "🆙 Updating Node..."
+            echo "🆙 Updating node..."
             echo "Running \`$_outdated_update_node\`"
             eval "$_outdated_update_node"
             export _outdated_update_node=''
@@ -298,7 +298,7 @@ function outdated () {
     function up_py() {
         [[ -z "$_outdated_update_py" ]] && out_py noupcmd
         if [[ ! -z "$_outdated_update_py" ]]; then
-            echo "🆙 Updating Python..."
+            echo "🆙 Updating python..."
             echo "Running \`$_outdated_update_py\`"
             eval "$_outdated_update_py"
             export _outdated_update_py=''
