@@ -185,73 +185,105 @@ function switchvenv_init() {
 # Check Node, Python and Homebrew for outdated versions
 function outdated () {
     ## node
-    echo "Node"
-    echo "-------------------"
-    node_current=${"$(node -v)":1} # remove leading 'v'
-    node_latest=$(n lsr lts)
-    if [[ $node_current == $node_latest ]]; then
-        echo "✅          $node_current"
-    else
-        echo "Latest LTS: $node_latest"
-        echo "Current:    $node_current"
-        echo "🔄 Update with \`n lts --preserve\`"
-    fi
+    function out_node() {
+        echo "Node"
+        echo "-------------------"
+        node_current=${"$(node -v)":1} # remove leading 'v'
+        node_latest=$(n lsr lts)
+        if [[ $node_current == $node_latest ]]; then
+            echo "✅          $node_current"
+        else
+            echo "Latest LTS: $node_latest"
+            echo "Current:    $node_current"
+            echo "🔄 Update with \`n lts --preserve\`"
+        fi
+    }
     
     ## python
-    echo "\nPython"
-    echo   "-------------------"
-    python_current=$(pyenv version-name)
-    ## latest (without characters other than digits and .) Note: xargs trims the string
-    python_latest=$(pyenv install --list | grep -E "^\s+[0-9.]+$" | tail -1 | xargs echo)
-    if [[ $python_current == $python_latest ]]; then
-        echo "✅           $python_current"
-    else
-        echo "Latest:      $python_latest"
-        echo "Current:     $python_current"
-        echo "🔄 Update with \`pyenv install $python_latest\`"
-    fi
+    function out_python() {
+        echo "\nPython"
+        echo   "-------------------"
+        python_current=$(pyenv version-name)
+        ## latest (without characters other than digits and .) Note: xargs trims the string
+        python_latest=$(pyenv install --list | grep -E "^\s+[0-9.]+$" | tail -1 | xargs echo)
+        if [[ $python_current == $python_latest ]]; then
+            echo "✅           $python_current"
+        else
+            echo "Latest:      $python_latest"
+            echo "Current:     $python_current"
+            echo "🔄 Update with \`pyenv install $python_latest\`"
+        fi
+    }
     
     ## npm
-    echo "\nnpm (outdated)"
-    echo   "-------------------"
-    npm_out=$(npm out -g)
-    if [[ -z "$npm_out" ]]; then
-        echo "✅"
-    else
-        echo $npm_out
-        # echo "🔄 Update with \`npm i -g <package>\`"
-        npm_out=`echo "$npm_out" | tail -f -n +2` # remove header (1 line)
-        npm_out=`echo "$npm_out" | sed -e 's/[[:space:]].*$//'` # only keep first part of each line
-        npm_out=`echo "$npm_out" | xargs` # contract to arg list
-        echo "🔄 Update with \`npm i -g $npm_out\`"
-    fi
+    function out_npm() {
+      echo "\nnpm"
+      echo   "-------------------"
+      npm_out=$(npm out -g)
+      if [[ -z "$npm_out" ]]; then
+          echo "✅"
+      else
+          echo $npm_out
+          # echo "🔄 Update with \`npm i -g <package>\`"
+          npm_out=`echo "$npm_out" | tail -f -n +2` # remove header (1 line)
+          npm_out=`echo "$npm_out" | sed -e 's/[[:space:]].*$//'` # only keep first part of each line
+          npm_out=`echo "$npm_out" | xargs` # contract to arg list
+          echo "🔄 Update with \`npm i -g $npm_out\`"
+      fi
+    }
     
     ## pip
-    echo "\npip (outdated)"
-    echo   "-------------------"
-    pip_out=$(pyenv exec pip list --outdated)
-    if [[ -z "$pip_out" ]]; then
-        echo "✅"
-    else
-        echo $pip_out
-        # echo "🔄 Update with \`pip install --upgrade <package>\`"
-        pip_out=`echo "$pip_out" | tail -f -n +3` # remove header (2 lines)
-        pip_out=`echo "$pip_out" | sed -e 's/[[:space:]].*$//'` # only keep first part of each line
-        pip_out=`echo "$pip_out" | xargs` # contract to arg list
-        echo "🔄 Update with \`pip install --upgrade $pip_out\`"
-    fi
+    function out_pip() {
+      echo "\npip"
+      echo   "-------------------"
+      pip_out=$(pyenv exec pip list --outdated)
+      if [[ -z "$pip_out" ]]; then
+          echo "✅"
+      else
+          echo $pip_out
+          # echo "🔄 Update with \`pip install --upgrade <package>\`"
+          pip_out=`echo "$pip_out" | tail -f -n +3` # remove header (2 lines)
+          pip_out=`echo "$pip_out" | sed -e 's/[[:space:]].*$//'` # only keep first part of each line
+          pip_out=`echo "$pip_out" | xargs` # contract to arg list
+          echo "🔄 Update with \`pip install --upgrade $pip_out\`"
+      fi
+    }
     
     ## homebrew
-    echo "\nHomebrew (outdated)"
-    echo   "-------------------"
-    brew update --quiet
-    brew_out=$(brew outdated)
-    if [[ -z "$brew_out" ]]; then
-        echo "✅"
+    function out_brew() {
+      echo "\nHomebrew"
+      echo   "-------------------"
+      brew update --quiet
+      brew_out=$(brew outdated)
+      if [[ -z "$brew_out" ]]; then
+          echo "✅"
+      else
+          echo $brew_out
+          echo "🔄 Update with \`brew upgrade\`"
+      fi
+    }
+    
+    function out_all() {
+        out_node
+        out_python
+        out_npm
+        out_pip
+        out_brew
+    }
+    
+    if [[ $1 == "node" ]] ; then
+      out_node
+    elif [[ $1 == "python" || $1 == "py" ]]; then
+        out_python
+    elif [[ $1 == "npm" ]]; then
+        out_npm
+    elif [[ $1 == "pip" ]]; then
+        out_pip
+    elif [[ $1 == "homebrew" || $1 == "brew" ]]; then
+        out_brew
     else
-        echo $brew_out
-        echo "🔄 Update with \`brew upgrade\`"
-    fi
+      out_all
+    fi  
 }
 
 # Show motd when logging in
