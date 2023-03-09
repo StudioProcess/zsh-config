@@ -200,7 +200,7 @@ function outdated () {
             echo "Current:    $node_current"
             export _outdated_update_node="n lts --preserve"
             if [[ $1 != "noupcmd" ]]; then
-                echo "🔄 Update with \`$_outdated_update_node\` or \`$FN_NAME update node\`"
+                echo "🔄 Update with \`$FN_NAME update node\` (or \`$_outdated_update_node\`)"
             fi
         fi
     }
@@ -219,7 +219,7 @@ function outdated () {
             echo "Current:     $python_current"
             export _outdated_update_py="pyenv install $python_latest"
             if [[ $1 != "noupcmd" ]]; then
-                echo "🔄 Update with \`$_outdated_update_py\` or \`$FN_NAME update python\`"
+                echo "🔄 Update with \`$FN_NAME update py\` (or \`$_outdated_update_py\`)"
             fi
         fi
     }
@@ -239,7 +239,7 @@ function outdated () {
             npm_out=`echo "$npm_out" | xargs` # contract to arg list
             export _outdated_update_npm="npm i -g $npm_out"
             if [[ $1 != "noupcmd" ]]; then
-                echo "🔄 Update with \`$_outdated_update_npm\` or \`$FN_NAME update npm\`"
+                echo "🔄 Update with \`$FN_NAME update npm\` (or \`$_outdated_update_npm\`)"
             fi
         fi
     }
@@ -259,7 +259,7 @@ function outdated () {
             pip_out=`echo "$pip_out" | xargs` # contract to arg list
             export _outdated_update_pip="pip install --upgrade $pip_out"
             if [[ $1 != "noupcmd" ]]; then
-                echo "🔄 Update with \`$_outdated_update_pip\` or \`$FN_NAME update pip\`" 
+                echo "🔄 Update with \`$FN_NAME update pip\` (or \`$_outdated_update_pip\`)"
             fi
         fi
     }
@@ -276,7 +276,7 @@ function outdated () {
             echo $brew_out
             export _outdated_update_brew="brew upgrade"
             if [[ $1 != "noupcmd" ]]; then
-                echo "🔄 Update with \`$_outdated_update_brew\` or \`$FN_NAME update brew\`"
+                echo "🔄 Update with \`$FN_NAME update brew\` (or \`$_outdated_update_brew\`)"
             fi
         fi
     }
