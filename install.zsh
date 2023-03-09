@@ -3,8 +3,9 @@
 
 # download
 echo "Downloading..."
+TIMESTAMP=$(date +%s) # unix timestamp
 # create tmp folder
-TMPFOLDER="/tmp/zsh-config-$$$RANDOM" # e.g. /tmp/zsh-config-3754419952
+TMPFOLDER="/tmp/zsh-config-$TIMESTAMP" # e.g. /tmp/zsh-config-1678352752
 mkdir $TMPFOLDER
 # echo $TMPFOLDER
 git clone https://github.com/StudioProcess/zsh-config $TMPFOLDER
@@ -15,7 +16,7 @@ git clone https://github.com/StudioProcess/zsh-config $TMPFOLDER
 echo "Installing .zshrc ..."
 if  [ -f ~/.zshrc ]; then
   # backup existing .zshrc
-  mv ~/.zshrc ~/.zshrc.old-$$$RANDOM
+  mv ~/.zshrc ~/.zshrc.old-$TIMESTAMP
 fi
 cp $TMPFOLDER/.zshrc ~/
 
