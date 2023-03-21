@@ -1,4 +1,4 @@
-# 2020-09-24, 2020-09-18, 2020-01-21, 2022-03-09, 2022-07-06, 2022-08-30, 2022-11-07, 2023-02-17
+# 2020-09-24, 2020-09-18, 2020-01-21, 2022-03-09, 2022-07-06, 2022-08-30, 2022-11-07, 2023-02-17, 2023-03-21
 # Plugin selection mainly from:
 # https://medium.com/@ahadsheriff/how-to-get-a-better-development-experience-on-your-mac-8478be58bba4
 #
@@ -101,7 +101,7 @@ function new () {
 \ \ \ \ "npm": "^'$(npm -v)'"\
 \ \ }\
 ' package.json
-        echo "node_modules\n.DS_Store\nvenv\n.venv" > .gitignore
+        echo "node_modules\n.DS_Store\n__pycache__\nvenv\n.venv" > .gitignore
         git init 1>/dev/null
         sed -i '' 's/master/main/g' .git/HEAD # rename master to main
     fi
