@@ -288,7 +288,7 @@ function outdated () {
     function up_node() {
         [[ -z "$_outdated_update_node" ]] && out_node noupcmd
         if [[ ! -z "$_outdated_update_node" ]]; then
-            echo "🆙 Updating node..."
+            echo "\n🆙 Updating node..."
             echo "Running \`$_outdated_update_node\`"
             eval "$_outdated_update_node"
             export _outdated_update_node=''
@@ -298,7 +298,7 @@ function outdated () {
     function up_py() {
         [[ -z "$_outdated_update_py" ]] && out_py noupcmd
         if [[ ! -z "$_outdated_update_py" ]]; then
-            echo "🆙 Updating python..."
+            echo "\n🆙 Updating python..."
             echo "Running \`$_outdated_update_py\`"
             eval "$_outdated_update_py"
             export _outdated_update_py=''
@@ -308,7 +308,7 @@ function outdated () {
     function up_npm() {
         [[ -z "$_outdated_update_npm" ]] && out_npm noupcmd
         if [[ ! -z "$_outdated_update_npm" ]]; then
-            echo "🆙 Updating npm packages..."
+            echo "\n🆙 Updating npm packages..."
             echo "Running \`$_outdated_update_npm\`"
             eval "$_outdated_update_npm"
             export _outdated_update_npm=''
@@ -318,7 +318,7 @@ function outdated () {
     function up_pip() {
         [[ -z "$_outdated_update_pip" ]] && out_pip noupcmd
         if [[ ! -z "$_outdated_update_pip" ]]; then
-            echo "🆙 Updating pip packages..."
+            echo "\n🆙 Updating pip packages..."
             echo "Running \`$_outdated_update_pip\`"
             eval "$_outdated_update_pip"
             export _outdated_update_pip=''
@@ -328,7 +328,7 @@ function outdated () {
     function up_brew() {
         [[ -z "$_outdated_update_brew" ]] && out_brew noupcmd
         if [[ ! -z "$_outdated_update_brew" ]]; then
-            echo "🆙 Updating brew packages..."
+            echo "\n🆙 Updating brew packages..."
             echo "Running \`$_outdated_update_brew\`"
             eval "$_outdated_update_brew"
             export _outdated_update_brew=''
