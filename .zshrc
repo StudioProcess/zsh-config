@@ -121,7 +121,7 @@ function timeout() { perl -e 'alarm shift; exec @ARGV' "$@"; }
 function motd () {
     TD=$(date -r ~/.motd +%s 2>/dev/null || echo 0) # touch date in seconds (or 0 if date fails i.e. file doesn't exit)
     MD=$(date -v 0H -v 0M -v 0S +%s) # midnight date in seconds
-    if [[ TD < MD ]] || [[ "$1" == "-f" ]]; then
+    if [[ $TD < $MD || "$1" == "-f" ]]; then
         # todo: handle timeout of quote
         quote > ~/.motd # get new quote and save it
     fi
