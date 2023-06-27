@@ -123,7 +123,8 @@ function motd () {
     MD=$(date -v 0H -v 0M -v 0S +%s) # midnight date in seconds
     if [[ $TD < $MD || "$1" == "-f" ]]; then
         # todo: handle timeout of quote
-        quote > ~/.motd # get new quote and save it
+        new_quote=$(quote) # get new quote
+        [[ -n $new_quote ]] && echo $new_quote > ~/.motd # save, if not empty
     fi
     /bin/cat ~/.motd
 }
