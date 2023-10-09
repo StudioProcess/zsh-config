@@ -218,7 +218,7 @@ function outdated () {
         else
             echo "Latest:      $python_latest"
             echo "Current:     $python_current"
-            export _outdated_update_py="pyenv install $python_latest"
+            export _outdated_update_py="pyenv install $python_latest && pyenv global $python_latest"
             if [[ $1 != "noupcmd" ]]; then
                 echo "🔄 Update with \`$FN_NAME update py\` (or \`$_outdated_update_py\`)"
             fi
