@@ -381,6 +381,36 @@ function outdated () {
     fi  
 }
 
+# Hexdump
+function hexdump () {
+    if [[ -z "$1" ]]; then
+        echo "Usage:"
+        echo "  $0 file [number-of-lines]"
+        return 1
+    fi
+    if [[ -t 1 ]]; then
+        # stdout is a terminal
+        local NUM_LINES=20
+        [[ -n "$2" ]] && NUM_LINES="$2"
+        # TODO check for pygmentize
+        if [[ $NUM_LINES -eq 0 ]]; then
+            xxd $1 | pygmentize -l hexdump
+        else 
+            xxd $1 | head -n "$NUM_LINES" | pygmentize -l hexdump
+        fi
+        [[ -z "$2" ]] && echo "/*\n    Output truncated to $NUM_LINES lines.\n    Specify number of lines as 2nd argument (0 for unlimited).\n    When redirecting to a file (with \'>\'), the whole file is dumped by default.\n*/"
+    else
+        # stdout isn't a terminal
+        local NUM_LINES=0
+        [[ -n "$2" ]] && NUM_LINES="$2"
+        if [[ $NUM_LINES -eq 0 ]]; then
+            xxd $1
+        else 
+            xxd $1 | head -n "$NUM_LINES"
+        fi
+    fi
+}
+
 # Show motd when logging in
 echo; motd
 
