@@ -411,6 +411,42 @@ function hexdump () {
     fi
 }
 
+# Get path of c header file
+function cheader () {
+    if [[ -z "$1" ]]; then
+        echo "Usage:"
+        echo "  $0 header-filename ... Print path of C header file (.c can be omitted)"
+        return 1
+    fi
+    
+    # add .c if omitted
+    if [[ "$1" != *.h ]]; then
+        1="$1.h"
+    fi
+    
+    # list of paths
+    local paths=()
+    
+    paths+=("/usr/include/$1")
+    if [[ $(uname) == 'Darwin' ]]; then
+        paths+=("$(xcode-select -p)/SDKs/MacOSX.sdk/usr/include/$1")
+    fi
+    paths+=("/usr/local/include/$1")
+    
+    for p in $paths; do
+        # check if file exists
+        if [[ -f $p ]]; then
+            echo "$p"
+            return 0
+        fi
+    done
+   
+    echo "Couldn't find header $1"
+    return 2
+}
+alias ch=cheader
+
+
 # Show motd when logging in
 echo; motd
 
