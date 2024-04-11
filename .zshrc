@@ -34,6 +34,10 @@ source ~/.znap/zsh-snap/znap.zsh  # Start Znap
 znap source sindresorhus/pure async.zsh pure.zsh
 # znap prompt sindresorhus/pure # fast prompt (needs to be put after modt though)
 
+# add exit code to prompt (if non-zero)
+_PROMPT_NEWLINE=$'\n' # workaround to get newline within prompt
+PROMPT='%(?.%F{magenta}.%F{red}%?${_PROMPT_NEWLINE})❯%f '
+
 # plugins
 znap source zsh-users/zsh-syntax-highlighting
 znap source zsh-users/zsh-autosuggestions
