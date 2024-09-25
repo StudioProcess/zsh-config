@@ -22,8 +22,9 @@ export PATH="/usr/local/sbin:$PATH"
 export PATH="/usr/local/opt/python@3/libexec/bin:$PATH" # python3 unversioned symlinks (from homebrew)
 
 # Setup pyenv (if installed)
-which pyenv > /dev/null
-if [[ $? -eq 0 ]]; then
+which pyenv > /dev/null 2>&1
+HAS_PYENV=$?
+if [[ $HAS_PYENV ]]; then
     export PYENV_ROOT="$(pyenv root)"
     [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
     eval "$(pyenv init -)"
@@ -150,15 +151,45 @@ function mkvenv () {
         echo "venv already present: ${GRAY}$PWD/$VENV_DIR${NC}"
         return
     fi
+    if [[ $HAS_PYENV ]]; then
+        if [[ -n "$1" ]]; then
+            py_version="$1"
+        else
+            py_version=$(pyenv global)
+        fi
+        # check if requested version is installed
+        available_version=$(pyenv latest $py_version 2> /dev/null)
+        if [[ $? -ne 0 ]]; then
+            # not installed; check if version is available
+            install_version=$(pyenv latest --known $py_version 2> /dev/null)
+            if [[ $? -ne 0 ]]; then
+                echo "Python version not available: $py_version"
+                return 1
+            fi
+            echo "Installing python version: $install_version"
+            pyenv install $install_version
+            echo "Using python version: $install_version"
+        else
+            echo "Using python version: $available_version"
+        fi
+        
+        pyenv local $py_version # set the version given, not the actual installed one
+    fi
     echo "Creating venv: ${GRAY}$PWD/$VENV_DIR${NC}"
     python -m venv $VENV_DIR
-    [[ -f "$PWD/$VENV_DIR/pyvenv.cfg" ]] && source $PWD/$VENV_DIR/bin/activate
+    if [[ -f "$PWD/$VENV_DIR/pyvenv.cfg" ]]; then
+        echo "Activating venv: ${GRAY}$PWD/$VENV_DIR${NC}";
+        source $PWD/$VENV_DIR/bin/activate
+    fi
 }
 function rmvenv () {
     for venv_dir in $VENV_DIR $VENV_DIR/*(N); do
         if [[ -f "$PWD/$venv_dir/pyvenv.cfg" ]]; then
+            if [[ -n $VIRTUAL_ENV ]]; then
+                echo "Deactivating venv: ${GRAY}$VIRTUAL_ENV${NC}";
+                deactivate
+            fi
             echo "Removing venv: ${GRAY}$PWD/$venv_dir${NC}"
-            [[ -n $VIRTUAL_ENV ]] && deactivate
             rm -rf $PWD/$venv_dir
         fi
     done
