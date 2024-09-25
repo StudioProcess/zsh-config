@@ -20,8 +20,14 @@ export EDITOR='nova'
 # Note: homebrew bins are linked from /usr/local/bin, which is already in the path
 export PATH="/usr/local/sbin:$PATH"
 export PATH="/usr/local/opt/python@3/libexec/bin:$PATH" # python3 unversioned symlinks (from homebrew)
-which pyenv > /dev/null && export PATH="$(pyenv root)/shims:$PATH" # pyenv (if installed)
 
+# Setup pyenv (if installed)
+which pyenv > /dev/null
+if [[ $? -eq 0 ]]; then
+    export PYENV_ROOT="$(pyenv root)"
+    [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init -)"
+fi
 
 # PLUGINS
 # Download Znap, if it's not there yet.
