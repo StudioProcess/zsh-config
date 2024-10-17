@@ -252,7 +252,7 @@ function outdated () {
     function out_py() {
         echo "\npython"
         echo   "-------------------"
-        python_current=$(pyenv version-name)
+        python_current=$(pyenv global)
         ## latest (without characters other than digits and .) Note: xargs trims the string
         python_latest=$(pyenv install --list | grep -E "^\s+[0-9.]+$" | tail -1 | xargs echo)
         if [[ $python_current == $python_latest ]]; then
