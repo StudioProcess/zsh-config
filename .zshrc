@@ -121,9 +121,9 @@ function new () {
 
 function quote () {
     emulate -L zsh
-    Q=$(curl -s --connect-timeout 1 "http://www.quotationspage.com/random.php" | iconv -c -f ISO-8859-1 -t UTF-8 | grep -m 1 "dt ") 
-    TXT=$(echo "$Q" | sed -e 's/<\/dt>.*//g' -e 's/.*html//g' -e 's/^[^a-zA-Z]*//' -e 's/<\/a..*$//g') 
-    WHO=$(echo "$Q" | sed -e 's/.*\/quotes\///g' -e 's/<.*//g' -e 's/.*">//g') 
+    Q=$(curl -s --connect-timeout 1 "http://www.quotationspage.com/random.php" | iconv -c -f ISO-8859-1 -t UTF-8 | grep -m 1 "dt ")
+    TXT=$(echo "$Q" | sed -e 's/<\/dt>.*//g' -e 's/.*html//g' -e 's/^[^a-zA-Z]*//' -e 's/<\/a..*$//g')
+    WHO=$(echo "$Q" | sed -e 's/.*\/quotes\///g' -e 's/<.*//g' -e 's/.*">//g')
     [[ -n "$WHO" && -n "$TXT" ]] && echo "\"${TXT}\"\n\t-${WHO}"
 }
 
@@ -420,7 +420,7 @@ function outdated () {
         fi
     else
         usage
-    fi  
+    fi
 }
 
 # Hexdump
@@ -437,7 +437,7 @@ function hexdump () {
         # TODO check for pygmentize
         if [[ $NUM_LINES -eq 0 ]]; then
             xxd $1 | pygmentize -l hexdump
-        else 
+        else
             xxd $1 | head -n "$NUM_LINES" | pygmentize -l hexdump
         fi
         [[ -z "$2" ]] && echo "/*\n    Output truncated to $NUM_LINES lines.\n    Specify number of lines as 2nd argument (0 for unlimited).\n    When redirecting to a file (with \'>\'), the whole file is dumped by default.\n*/"
@@ -447,7 +447,7 @@ function hexdump () {
         [[ -n "$2" ]] && NUM_LINES="$2"
         if [[ $NUM_LINES -eq 0 ]]; then
             xxd $1
-        else 
+        else
             xxd $1 | head -n "$NUM_LINES"
         fi
     fi
