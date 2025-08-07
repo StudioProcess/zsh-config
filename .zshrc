@@ -104,7 +104,8 @@ function new () {
         sed -i '' 's/1.0.0/0.1.0/g' package.json
         sed -i '' "s#\"author\": \"\"#\"author\": \"$AUTHOR_STRING\"#g" package.json
         sed -i '' 's/ISC"/AGPL-3.0"/g' package.json
-        sed -i '' 's/"description": ""/"description": "",/g' package.json
+        # sed -i '' 's/"type": "commonjs"/"type": "commonjs",/g' package.json # keep type line but add trailing comma
+        sed -i '' '/"type"/d' package.json # delete "type" line
         node=$(node -v); node="${node:1}" # remove first character ('v') from version string
         # add engines field with current versions of node and npm (use caret ^ to allow minor and patch changes)
         sed -i '' '$i\
