@@ -18,8 +18,10 @@ export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export EDITOR='nova'
 # Note: homebrew bins are linked from /usr/local/bin, which is already in the path
+# PATH="$(brew --prefix)/bin:$PATH"
 export PATH="/usr/local/sbin:$PATH"
-export PATH="/usr/local/opt/python@3/libexec/bin:$PATH" # python3 unversioned symlinks (from homebrew)
+export PATH="$(brew --prefix python@3)libexec/bin:$PATH" # python3 unversioned symlinks (from homebrew)
+export PATH="$(brew --prefix rustup)/bin:$PATH" # rust toolchain (via rustup)
 
 # Setup pyenv (if installed)
 which pyenv > /dev/null 2>&1
