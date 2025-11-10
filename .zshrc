@@ -122,9 +122,10 @@ function new () {
     fi
 }
 
+QUOTE_TIMEOUT=3
 function quote () {
     emulate -L zsh
-    Q=$(curl -s --connect-timeout 1 -L "https://www.quotationspage.com/random.php" | iconv -c -f ISO-8859-1 -t UTF-8 | grep -m 1 "dt ")
+    Q=$(curl -s --connect-timeout $QUOTE_TIMEOUT -L "https://www.quotationspage.com/random.php" | iconv -c -f ISO-8859-1 -t UTF-8 | grep -m 1 "dt ")
     TXT=$(echo "$Q" | sed -e 's/<\/dt>.*//g' -e 's/.*html//g' -e 's/^[^a-zA-Z]*//' -e 's/<\/a..*$//g')
     setopt extended_glob # extended globbing required for next line
     TXT="${TXT// #<br> #/\n}" # replace <br> with newlines (preceded and followed by 0 or more spaces)
