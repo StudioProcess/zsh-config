@@ -122,8 +122,9 @@ function new () {
     fi
 }
 
-QUOTE_TIMEOUT=3
 function quote () {
+    QUOTE_TIMEOUT=0
+    [[ -n "$1" ]] && QUOTE_TIMEOUT=$1
     emulate -L zsh
     Q=$(curl -s --connect-timeout $QUOTE_TIMEOUT -L "https://www.quotationspage.com/random.php" | iconv -c -f ISO-8859-1 -t UTF-8 | grep -m 1 "dt ")
     TXT=$(echo "$Q" | sed -e 's/<\/dt>.*//g' -e 's/.*html//g' -e 's/^[^a-zA-Z]*//' -e 's/<\/a..*$//g')
@@ -140,8 +141,7 @@ function motd () {
     TD=$(date -r ~/.motd +%s 2>/dev/null || echo 0) # touch date in seconds (or 0 if date fails i.e. file doesn't exit)
     MD=$(date -v 0H -v 0M -v 0S +%s) # midnight date in seconds
     if [[ $TD < $MD || "$1" == "-f" ]]; then
-        # todo: handle timeout of quote
-        new_quote=$(quote) # get new quote
+        new_quote=$(quote 3) # get new quote (timeout 3 seconds)
         [[ -n $new_quote ]] && echo $new_quote > ~/.motd # save, if not empty
     fi
     /bin/cat ~/.motd
