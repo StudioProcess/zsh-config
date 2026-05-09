@@ -330,8 +330,25 @@ function outdated () {
         fi
     }
     
+    ## rust
+    function out_rust() {
+        echo "\nrust"
+        echo   "-------------------"
+        rust_out=$(rustup check)
+        if [[ "$rust_out" == *"up to date"* ]]; then
+            rust_current=`echo "$rust_out" | sed -r 's/^.*up to date: ([^ ]+).*$/\1/'`
+            echo "✅           $rust_current"
+        else
+            echo $rust_out
+            export _outdated_update_rust="rustup update"
+            if [[ $1 != "noupcmd" ]]; then
+                echo "🔄 Update with \`$FN_NAME update rust\` (or \`$_outdated_update_rust\`)"
+            fi
+        fi
+    }
+    
     function out_all() {
-        out_node; out_py; out_npm; out_pip; out_brew
+        out_node; out_py; out_npm; out_pip; out_brew; out_rust
     }
     
     function up_node() {
@@ -384,8 +401,18 @@ function outdated () {
         fi
     }
     
+    function up_rust() {
+        [[ -z "$_outdated_update_rust" ]] && out_rust noupcmd
+        if [[ ! -z "$_outdated_update_rust" ]]; then
+            echo "\n🆙 Updating rust..."
+            echo "Running \`$_outdated_update_rust\`"
+            eval "$_outdated_update_rust"
+            export _outdated_update_rust=''
+        fi
+    }
+    
     function up_all() {
-        up_node; up_py; up_npm; up_pip; up_brew
+        up_node; up_py; up_npm; up_pip; up_brew; up_rust
     }
     
     function usage() {
@@ -406,6 +433,8 @@ function outdated () {
         out_pip
     elif [[ $1 == "homebrew" || $1 == "brew" ]]; then
         out_brew
+    elif [[ $1 == "rust" ]]; then
+        out_rust
     elif [[ $1 == "all" || -z "$1" ]]; then
         out_all
     elif [[ $1 == "update" || $1 == "up" ]]; then
@@ -419,6 +448,8 @@ function outdated () {
             up_pip
         elif [[ $2 == "homebrew" || $2 == "brew" ]]; then
             up_brew
+        elif [[ $2 == "rust" ]]; then
+            up_rust
         elif [[ $2 == "all" || -z "$2" ]]; then
             up_all
         else
