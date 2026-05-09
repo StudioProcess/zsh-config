@@ -236,8 +236,51 @@ function switchvenv_init() {
 function outdated () {
     FN_NAME=$0
     
+    function check_node() {
+        which n > /dev/null 2>&1 || {
+            [[ $1 != "nowarn" ]] && echo "node (n) is not installed"
+            return 1
+        }
+    }
+    
+    function check_py() {
+        which pyenv > /dev/null 2>&1 || {
+            [[ $1 != "nowarn" ]] && echo "python (pyenv) is not installed"
+            return 1
+        }
+    }
+    
+    function check_npm() {
+        which npm > /dev/null 2>&1 || {
+            [[ $1 != "nowarn" ]] && echo "npm is not installed"
+            return 1
+        }
+    }
+    
+    function check_pip() {
+        which pip > /dev/null 2>&1 || {
+            [[ $1 != "nowarn" ]] && echo "pip is not installed"
+            return 1
+        }
+    }
+    
+    function check_brew() {
+        which brew > /dev/null 2>&1 || {
+            [[ $1 != "nowarn" ]] && echo "brew is not installed"
+            return 1
+        }
+    }
+    
+    function check_rust() {
+        which rustup > /dev/null 2>&1 || {
+            [[ $1 != "nowarn" ]] && echo "rust (rustup) is not installed"
+            return 1
+        }
+    }
+    
     ## node
     function out_node() {
+        check_node $1 || return 1
         echo "node"
         echo "-------------------"
         node_current=${"$(node -v)":1} # remove leading 'v'
@@ -256,6 +299,7 @@ function outdated () {
     
     ## python
     function out_py() {
+        check_py $1 || return 1
         echo "\npython"
         echo   "-------------------"
         python_current=$(pyenv global)
@@ -275,6 +319,7 @@ function outdated () {
     
     ## npm
     function out_npm() {
+        check_npm $1 || return 1
         echo "\nnpm"
         echo   "-------------------"
         npm_out=$(npm out -g)
@@ -295,6 +340,7 @@ function outdated () {
     
     ## pip
     function out_pip() {
+        check_pip $1 || return 1
         echo "\npip"
         echo   "-------------------"
         pip_out=$(pyenv exec pip list --outdated)
@@ -315,6 +361,7 @@ function outdated () {
     
     ## homebrew
     function out_brew() {
+        check_brew $1 || return 1
         echo "\nbrew"
         echo   "-------------------"
         brew update --quiet
@@ -332,6 +379,7 @@ function outdated () {
     
     ## rust
     function out_rust() {
+        check_rust $1 || return 1
         echo "\nrust"
         echo   "-------------------"
         rust_out=$(rustup check)
@@ -348,10 +396,11 @@ function outdated () {
     }
     
     function out_all() {
-        out_node; out_py; out_npm; out_pip; out_brew; out_rust
+        out_node nowarn; out_py nowarn; out_rust nowarn; out_npm nowarn; out_pip nowarn; out_brew nowarn
     }
     
     function up_node() {
+        check_node $1 || return 1
         [[ -z "$_outdated_update_node" ]] && out_node noupcmd
         if [[ ! -z "$_outdated_update_node" ]]; then
             echo "\n🆙 Updating node..."
@@ -362,6 +411,7 @@ function outdated () {
     }
     
     function up_py() {
+        check_py $1 || return 1
         [[ -z "$_outdated_update_py" ]] && out_py noupcmd
         if [[ ! -z "$_outdated_update_py" ]]; then
             echo "\n🆙 Updating python..."
@@ -372,6 +422,7 @@ function outdated () {
     }
     
     function up_npm() {
+        check_npm $1 || return 1
         [[ -z "$_outdated_update_npm" ]] && out_npm noupcmd
         if [[ ! -z "$_outdated_update_npm" ]]; then
             echo "\n🆙 Updating npm packages..."
@@ -382,6 +433,7 @@ function outdated () {
     }
     
     function up_pip() {
+        check_pip $1 || return 1
         [[ -z "$_outdated_update_pip" ]] && out_pip noupcmd
         if [[ ! -z "$_outdated_update_pip" ]]; then
             echo "\n🆙 Updating pip packages..."
@@ -392,6 +444,7 @@ function outdated () {
     }
     
     function up_brew() {
+        check_brew $1 || return 1
         [[ -z "$_outdated_update_brew" ]] && out_brew noupcmd
         if [[ ! -z "$_outdated_update_brew" ]]; then
             echo "\n🆙 Updating brew packages..."
@@ -402,6 +455,7 @@ function outdated () {
     }
     
     function up_rust() {
+        check_rust $1 || return 1
         [[ -z "$_outdated_update_rust" ]] && out_rust noupcmd
         if [[ ! -z "$_outdated_update_rust" ]]; then
             echo "\n🆙 Updating rust..."
@@ -412,7 +466,7 @@ function outdated () {
     }
     
     function up_all() {
-        up_node; up_py; up_npm; up_pip; up_brew; up_rust
+        up_node nowarn; up_py nowarn; up_rust nowarn; up_npm nowarn; up_pip nowarn; up_brew nowarn
     }
     
     function usage() {
