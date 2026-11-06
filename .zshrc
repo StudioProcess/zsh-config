@@ -43,9 +43,9 @@ source ~/.znap/zsh-snap/znap.zsh  # Start Znap
 znap source sindresorhus/pure async.zsh pure.zsh
 # znap prompt sindresorhus/pure # fast prompt (needs to be put after modt though)
 
-# add exit code to prompt (if non-zero)
-_PROMPT_NEWLINE=$'\n' # workaround to get newline within prompt
-PROMPT='%(?.%F{magenta}.%F{red}%?${_PROMPT_NEWLINE})❯%f '
+# add exit code to prompt (if non-zero) → breaks pwd display in pure prompt
+# _PROMPT_NEWLINE=$'\n' # workaround to get newline within prompt
+# PROMPT='%(?.%F{magenta}.%F{red}%?${_PROMPT_NEWLINE})❯%f '
 
 # plugins
 znap source zsh-users/zsh-syntax-highlighting
@@ -72,12 +72,27 @@ setopt auto_cd # cd by just typing the folder name
 
 # ALIASES
 alias ls='ls -G' # colored ls
-if type 'ccat' > /dev/null; then # colored cat (if available)
-    alias cat=ccat
-fi
-if type 'cless' > /dev/null; then # colored less (if available)
-    alias less=cless
-fi
+# Colored cat/less (colorize plugin), but only when output goes to a terminal.
+# Tools (e.g. Claude Code, IDEs) snapshot this shell's aliases/functions and replay them
+# non-interactively, where colorize_cat breaks (it ignores file args when stdin isn't a tty).
+# These are functions (not aliases) so the check happens at call time.
+function cat () {
+    # colorize only if: stdout is a tty, colorize is available, no options given (e.g. -n),
+    # and input is either files (stdin is a tty) or piped stdin (no file args)
+    if [[ -t 1 ]] && (( $+functions[colorize_cat] )) && [[ "$*" != (|* )-* ]] \
+        && { [[ -t 0 && $# -gt 0 ]] || [[ ! -t 0 && $# -eq 0 ]] }; then
+        colorize_cat "$@"
+    else
+        command cat "$@"
+    fi
+}
+function less () {
+    if [[ -t 1 ]] && (( $+functions[colorize_less] )); then
+        colorize_less "$@"
+    else
+        command less "$@"
+    fi
+}
 
 alias home='cd ~'
 alias lanip="ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'" #https://stackoverflow.com/a/13322549
@@ -91,7 +106,7 @@ CODE_FOLDER=~/code # don't quote so tilde gets expanded
 function code () {
     if (( $# == 0 )); then
         # of args is empty (length zero?)
-        1=10
+        1=15
     fi
     cd $CODE_FOLDER; ls -t | head -n $1 | column;
 }
@@ -602,7 +617,6 @@ echo; motd
 switchvenv_init
 
 
-
 # --------------------------------------
 # AUTOMATICALLY UPDATED BELOW THIS POINT
 # --------------------------------------
@@ -623,3 +637,5 @@ else
 fi
 unset __conda_setup
 # <<< conda initialize <<<
+# Added by Antigravity IDE
+export PATH="/Users/mlg/.antigravity-ide/antigravity-ide/bin:$PATH"
