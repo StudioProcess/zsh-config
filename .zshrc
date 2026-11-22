@@ -151,11 +151,13 @@ function new () {
     fi
 }
 
+# Print a random quote
+# Usage: quote [timeout-in-seconds] (default 10; the limit for the whole request, not just connecting)
 function quote () {
-    QUOTE_TIMEOUT=0
+    local QUOTE_TIMEOUT=10 Q TXT WHO
     [[ -n "$1" ]] && QUOTE_TIMEOUT=$1
     emulate -L zsh
-    Q=$(curl -s --connect-timeout $QUOTE_TIMEOUT -L "https://www.quotationspage.com/random.php" | iconv -c -f ISO-8859-1 -t UTF-8 | grep -m 1 "dt ")
+    Q=$(curl -s --max-time $QUOTE_TIMEOUT -L "https://www.quotationspage.com/random.php" | iconv -c -f ISO-8859-1 -t UTF-8 | grep -m 1 "dt ")
     TXT=$(echo "$Q" | sed -e 's/<\/dt>.*//g' -e 's/.*html//g' -e 's/^[^a-zA-Z]*//' -e 's/<\/a..*$//g')
     setopt extended_glob # extended globbing required for next line
     TXT="${TXT// #<br> #/\n}" # replace <br> with newlines (preceded and followed by 0 or more spaces)
@@ -167,9 +169,10 @@ function quote () {
 function timeout() { perl -e 'alarm shift; exec @ARGV' "$@"; }
 
 function motd () {
+    local TD MD new_quote
     TD=$(date -r ~/.motd +%s 2>/dev/null || echo 0) # touch date in seconds (or 0 if date fails i.e. file doesn't exit)
     MD=$(date -v 0H -v 0M -v 0S +%s) # midnight date in seconds
-    if [[ $TD < $MD || "$1" == "-f" ]]; then
+    if (( TD < MD )) || [[ "$1" == "-f" ]]; then # (( )) compares numbers ([[ < ]] would compare strings)
         new_quote=$(quote 3) # get new quote (timeout 3 seconds)
         [[ -n $new_quote ]] && echo $new_quote > ~/.motd # save, if not empty
     fi
