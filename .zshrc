@@ -62,7 +62,6 @@ znap source sindresorhus/pure async.zsh pure.zsh
 # PROMPT='%(?.%F{magenta}.%F{red}%?${_PROMPT_NEWLINE})❯%f '
 
 # plugins
-znap source zsh-users/zsh-syntax-highlighting
 znap source zsh-users/zsh-autosuggestions
 # oh-my-zsh plugins
 znap source ohmyzsh/ohmyzsh lib/theme-and-appearance # required libraries for the following plugins
@@ -77,6 +76,8 @@ unalias rm cp mv 2> /dev/null
 function rm () { if [[ -t 0 ]]; then command rm -i "$@"; else command rm "$@"; fi; }
 function cp () { if [[ -t 0 ]]; then command cp -i "$@"; else command cp "$@"; fi; }
 function mv () { if [[ -t 0 ]]; then command mv -i "$@"; else command mv "$@"; fi; }
+# syntax highlighting: needs to be loaded after all other plugins (it wraps the widgets they define)
+znap source zsh-users/zsh-syntax-highlighting
 
 
 # OPTIONS
