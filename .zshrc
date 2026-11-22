@@ -284,10 +284,12 @@ function switchvenv_init() {
 }
 
 
-# Check Node, Python and Homebrew for outdated versions
+# Check Node, Python, Rust, npm and Homebrew for outdated versions
+# Note: the _outdated_update_* variables are global on purpose: a check stores the update command there,
+# and a later `outdated update` reuses it (without checking again)
 function outdated () {
-    FN_NAME=$0
-    
+    local FN_NAME=$0
+
     function check_node() {
         which fnm > /dev/null 2>&1 || {
             [[ $1 != "nowarn" ]] && echo "node (fnm) is not installed"
@@ -328,19 +330,24 @@ function outdated () {
         check_node $1 || return 1
         echo "node"
         echo "-------------------"
+        local node_current node_latest
         # current: fnm's default version (not `node -v`, which can be a per-project version via --use-on-cd)
         node_current=$(fnm default 2>/dev/null) # e.g. "v26.13.1"
         node_current=${node_current#v}
         [[ -z $node_current ]] && node_current="none"
         # latest: newest LTS release, e.g. "v26.13.1 (Lithium)"
-        node_latest=$(fnm ls-remote --lts --latest | sed -E 's/^v([0-9.]+).*/\1/')
+        node_latest=$(fnm ls-remote --lts --latest 2>/dev/null | sed -E 's/^v([0-9.]+).*/\1/')
+        if [[ -z $node_latest ]]; then
+            echo "Couldn't get the latest LTS version (offline?)"
+            return 1
+        fi
         if [[ $node_current == $node_latest ]]; then
             echo "✅          $node_current"
         else
             echo "Latest LTS: $node_latest"
             echo "Current:    $node_current"
             # install, make it the default for new shells, and use it in this shell
-            export _outdated_update_node="fnm install $node_latest && fnm default $node_latest && fnm use $node_latest"
+            _outdated_update_node="fnm install $node_latest && fnm default $node_latest && fnm use $node_latest"
             if [[ $1 != "noupcmd" ]]; then
                 echo "🔄 Update with \`$FN_NAME update node\` (or \`$_outdated_update_node\`)"
             fi
@@ -353,7 +360,7 @@ function outdated () {
         echo "\npython"
         echo   "-------------------"
         # current: the default python (`python` executable installed by `uv python install --default`)
-        local python_bin="$(uv python dir --bin)/python"
+        local python_bin="$(uv python dir --bin)/python" python_current python_latest
         python_current="none"
         if [[ -x "$python_bin" ]]; then
             python_current=$("$python_bin" --version) # e.g. "Python 3.15.2"
@@ -363,6 +370,10 @@ function outdated () {
         # Note: the list of available versions comes with uv itself, so it's only as recent as uv
         python_latest=$(uv python list --managed-python | grep -E '^cpython-[0-9]+\.[0-9]+\.[0-9]+-' \
             | head -1 | sed -E 's/^cpython-([0-9.]+)-.*/\1/')
+        if [[ -z $python_latest ]]; then
+            echo "Couldn't get the latest Python version"
+            return 1
+        fi
         if [[ $python_current == $python_latest ]]; then
             echo "✅           $python_current"
         else
@@ -370,7 +381,7 @@ function outdated () {
             echo "Current:     $python_current"
             # --default (installs `python` and `python3`) is still experimental in uv;
             # --preview-features opts in to it and silences the warning
-            export _outdated_update_py="uv python install --default --preview-features python-install-default $python_latest"
+            _outdated_update_py="uv python install --default --preview-features python-install-default $python_latest"
             if [[ $1 != "noupcmd" ]]; then
                 echo "🔄 Update with \`$FN_NAME update py\` (or \`$_outdated_update_py\`)"
             fi
@@ -382,16 +393,17 @@ function outdated () {
         check_npm $1 || return 1
         echo "\nnpm"
         echo   "-------------------"
+        local npm_out
         npm_out=$(npm out -g)
         if [[ -z "$npm_out" ]]; then
             echo "✅"
         else
             echo $npm_out
             # echo "🔄 Update with \`npm i -g <package>\`"
-            npm_out=`echo "$npm_out" | tail -f -n +2` # remove header (1 line)
+            npm_out=`echo "$npm_out" | tail -n +2` # remove header (1 line)
             npm_out=`echo "$npm_out" | sed -e 's/[[:space:]].*$//'` # only keep first part of each line
             npm_out=`echo "$npm_out" | xargs` # contract to arg list
-            export _outdated_update_npm="npm i -g $npm_out"
+            _outdated_update_npm="npm i -g $npm_out"
             if [[ $1 != "noupcmd" ]]; then
                 echo "🔄 Update with \`$FN_NAME update npm\` (or \`$_outdated_update_npm\`)"
             fi
@@ -408,12 +420,13 @@ function outdated () {
         echo "\nbrew"
         echo   "-------------------"
         brew update --quiet
+        local brew_out
         brew_out=$(brew outdated)
         if [[ -z "$brew_out" ]]; then
             echo "✅"
         else
             echo $brew_out
-            export _outdated_update_brew="brew upgrade"
+            _outdated_update_brew="brew upgrade"
             if [[ $1 != "noupcmd" ]]; then
                 echo "🔄 Update with \`$FN_NAME update brew\` (or \`$_outdated_update_brew\`)"
             fi
@@ -425,13 +438,14 @@ function outdated () {
         check_rust $1 || return 1
         echo "\nrust"
         echo   "-------------------"
+        local rust_out rust_current
         rust_out=$(rustup check)
         if [[ "$rust_out" == *"up to date"* ]]; then
             rust_current=`echo "$rust_out" | sed -r 's/^.*up to date: ([^ ]+).*$/\1/'`
             echo "✅           $rust_current"
         else
             echo $rust_out
-            export _outdated_update_rust="rustup update"
+            _outdated_update_rust="rustup update"
             if [[ $1 != "noupcmd" ]]; then
                 echo "🔄 Update with \`$FN_NAME update rust\` (or \`$_outdated_update_rust\`)"
             fi
@@ -449,7 +463,7 @@ function outdated () {
             echo "\n🆙 Updating node..."
             echo "Running \`$_outdated_update_node\`"
             eval "$_outdated_update_node"
-            export _outdated_update_node=''
+            _outdated_update_node=''
         fi
     }
     
@@ -460,7 +474,7 @@ function outdated () {
             echo "\n🆙 Updating python..."
             echo "Running \`$_outdated_update_py\`"
             eval "$_outdated_update_py"
-            export _outdated_update_py=''
+            _outdated_update_py=''
         fi
     }
     
@@ -471,7 +485,7 @@ function outdated () {
             echo "\n🆙 Updating npm packages..."
             echo "Running \`$_outdated_update_npm\`"
             eval "$_outdated_update_npm"
-            export _outdated_update_npm=''
+            _outdated_update_npm=''
         fi
     }
     
@@ -482,7 +496,7 @@ function outdated () {
             echo "\n🆙 Updating brew packages..."
             echo "Running \`$_outdated_update_brew\`"
             eval "$_outdated_update_brew"
-            export _outdated_update_brew=''
+            _outdated_update_brew=''
         fi
     }
     
@@ -493,7 +507,7 @@ function outdated () {
             echo "\n🆙 Updating rust..."
             echo "Running \`$_outdated_update_rust\`"
             eval "$_outdated_update_rust"
-            export _outdated_update_rust=''
+            _outdated_update_rust=''
         fi
     }
     
@@ -540,6 +554,13 @@ function outdated () {
     else
         usage
     fi
+    local exit_status=$?
+
+    # remove the helper functions again (zsh defines functions inside functions globally)
+    unfunction check_node check_py check_npm check_brew check_rust \
+        out_node out_py out_npm out_brew out_rust out_all \
+        up_node up_py up_npm up_brew up_rust up_all usage
+    return $exit_status
 }
 
 # Hexdump
