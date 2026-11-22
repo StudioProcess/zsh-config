@@ -603,24 +603,28 @@ function hexdump () {
 function cheader () {
     if [[ -z "$1" ]]; then
         echo "Usage:"
-        echo "  $0 header-filename ... Print path of C header file (.c can be omitted)"
+        echo "  $0 header-filename ... Print path of C header file (.h can be omitted)"
         return 1
     fi
-    
-    # add .c if omitted
+
+    # add .h if omitted
     if [[ "$1" != *.h ]]; then
         1="$1.h"
     fi
-    
+
     # list of paths
-    local paths=()
-    
+    local paths=() p sdk
+
     paths+=("/usr/include/$1")
     if [[ $(uname) == 'Darwin' ]]; then
-        paths+=("$(xcode-select -p)/SDKs/MacOSX.sdk/usr/include/$1")
+        # macOS SDK (from the Command Line Tools or Xcode, whichever is selected)
+        sdk=$(xcrun --show-sdk-path 2> /dev/null)
+        [[ -n $sdk ]] && paths+=("$sdk/usr/include/$1")
+        # Homebrew (/opt/homebrew on Apple Silicon)
+        paths+=("${HOMEBREW_PREFIX:-/opt/homebrew}/include/$1")
     fi
     paths+=("/usr/local/include/$1")
-    
+
     for p in $paths; do
         # check if file exists
         if [[ -f $p ]]; then
