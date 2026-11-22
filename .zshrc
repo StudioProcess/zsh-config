@@ -32,14 +32,11 @@ export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export EDITOR='nova'
 
-# Setup pyenv (if installed)
-which pyenv > /dev/null 2>&1
-HAS_PYENV=$?
-if [[ $HAS_PYENV ]]; then
-    export PYENV_ROOT="$(pyenv root)"
-    [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-    eval "$(pyenv init -)"
-fi
+# put ~/.local/bin (uv's python, python3 and uv tools) in front of the system paths
+# Note: ~/.zshenv adds it too (via uv), but macOS's path_helper (in /etc/zprofile) then moves it behind /usr/bin
+typeset -U path # remove duplicate entries from PATH (keeps the first one)
+[[ -d ~/.local/bin ]] && path=(~/.local/bin $path)
+
 
 # PLUGINS
 # Download Znap, if it's not there yet.
@@ -276,8 +273,8 @@ function outdated () {
     }
     
     function check_py() {
-        which pyenv > /dev/null 2>&1 || {
-            [[ $1 != "nowarn" ]] && echo "python (pyenv) is not installed"
+        which uv > /dev/null 2>&1 || {
+            [[ $1 != "nowarn" ]] && echo "python (uv) is not installed"
             return 1
         }
     }
@@ -285,13 +282,6 @@ function outdated () {
     function check_npm() {
         which npm > /dev/null 2>&1 || {
             [[ $1 != "nowarn" ]] && echo "npm is not installed"
-            return 1
-        }
-    }
-    
-    function check_pip() {
-        which pip > /dev/null 2>&1 || {
-            [[ $1 != "nowarn" ]] && echo "pip is not installed"
             return 1
         }
     }
@@ -329,20 +319,30 @@ function outdated () {
         fi
     }
     
-    ## python
+    ## python (via uv)
     function out_py() {
         check_py $1 || return 1
         echo "\npython"
         echo   "-------------------"
-        python_current=$(pyenv global)
-        ## latest (without characters other than digits and .) Note: xargs trims the string
-        python_latest=$(pyenv install --list | grep -E "^\s+[0-9.]+$" | tail -1 | xargs echo)
+        # current: the default python (`python` executable installed by `uv python install --default`)
+        local python_bin="$(uv python dir --bin)/python"
+        python_current="none"
+        if [[ -x "$python_bin" ]]; then
+            python_current=$("$python_bin" --version) # e.g. "Python 3.15.2"
+            python_current=${python_current#Python }
+        fi
+        # latest: newest stable cpython known to uv (skips alpha/beta/rc and freethreaded builds)
+        # Note: the list of available versions comes with uv itself, so it's only as recent as uv
+        python_latest=$(uv python list --managed-python | grep -E '^cpython-[0-9]+\.[0-9]+\.[0-9]+-' \
+            | head -1 | sed -E 's/^cpython-([0-9.]+)-.*/\1/')
         if [[ $python_current == $python_latest ]]; then
             echo "✅           $python_current"
         else
             echo "Latest:      $python_latest"
             echo "Current:     $python_current"
-            export _outdated_update_py="pyenv install $python_latest && pyenv global $python_latest"
+            # --default (installs `python` and `python3`) is still experimental in uv;
+            # --preview-features opts in to it and silences the warning
+            export _outdated_update_py="uv python install --default --preview-features python-install-default $python_latest"
             if [[ $1 != "noupcmd" ]]; then
                 echo "🔄 Update with \`$FN_NAME update py\` (or \`$_outdated_update_py\`)"
             fi
@@ -370,27 +370,10 @@ function outdated () {
         fi
     }
     
-    ## pip
-    function out_pip() {
-        check_pip $1 || return 1
-        echo "\npip"
-        echo   "-------------------"
-        pip_out=$(pyenv exec pip list --outdated)
-        if [[ -z "$pip_out" ]]; then
-            echo "✅"
-        else
-            echo $pip_out
-            # echo "🔄 Update with \`pip install --upgrade <package>\`"
-            pip_out=`echo "$pip_out" | tail -f -n +3` # remove header (2 lines)
-            pip_out=`echo "$pip_out" | sed -e 's/[[:space:]].*$//'` # only keep first part of each line
-            pip_out=`echo "$pip_out" | xargs` # contract to arg list
-            export _outdated_update_pip="pip install --upgrade $pip_out"
-            if [[ $1 != "noupcmd" ]]; then
-                echo "🔄 Update with \`$FN_NAME update pip\` (or \`$_outdated_update_pip\`)"
-            fi
-        fi
-    }
-    
+    ## uv tools
+    # No global pip anymore (uv uses per-project venvs). If we start using uv tools
+    # (`uv tool install …`), add a check here: `uv tool list --outdated` / `uv tool upgrade --all`
+
     ## homebrew
     function out_brew() {
         check_brew $1 || return 1
@@ -428,7 +411,7 @@ function outdated () {
     }
     
     function out_all() {
-        out_node nowarn; out_py nowarn; out_rust nowarn; out_npm nowarn; out_pip nowarn; out_brew nowarn
+        out_node nowarn; out_py nowarn; out_rust nowarn; out_npm nowarn; out_brew nowarn
     }
     
     function up_node() {
@@ -464,17 +447,6 @@ function outdated () {
         fi
     }
     
-    function up_pip() {
-        check_pip $1 || return 1
-        [[ -z "$_outdated_update_pip" ]] && out_pip noupcmd
-        if [[ ! -z "$_outdated_update_pip" ]]; then
-            echo "\n🆙 Updating pip packages..."
-            echo "Running \`$_outdated_update_pip\`"
-            eval "$_outdated_update_pip"
-            export _outdated_update_pip=''
-        fi
-    }
-    
     function up_brew() {
         check_brew $1 || return 1
         [[ -z "$_outdated_update_brew" ]] && out_brew noupcmd
@@ -498,15 +470,15 @@ function outdated () {
     }
     
     function up_all() {
-        up_node nowarn; up_py nowarn; up_rust nowarn; up_npm nowarn; up_pip nowarn; up_brew nowarn
+        up_node nowarn; up_py nowarn; up_rust nowarn; up_npm nowarn; up_brew nowarn
     }
     
     function usage() {
         echo "Usage:"
         echo "  Check all:        $FN_NAME"
-        echo "  Check specific:   $FN_NAME [node|python|py|npm|pip|homebrew|brew|all]"
+        echo "  Check specific:   $FN_NAME [node|python|py|rust|npm|homebrew|brew|all]"
         echo "  Update all:       $FN_NAME update|up"
-        echo "  Update specific:  $FN_NAME update|up [node|python|py|npm|pip|homebrew|brew|all]"
+        echo "  Update specific:  $FN_NAME update|up [node|python|py|rust|npm|homebrew|brew|all]"
     }
     
     if [[ $1 == "node" ]] ; then
@@ -515,8 +487,6 @@ function outdated () {
         out_py
     elif [[ $1 == "npm" ]]; then
         out_npm
-    elif [[ $1 == "pip" ]]; then
-        out_pip
     elif [[ $1 == "homebrew" || $1 == "brew" ]]; then
         out_brew
     elif [[ $1 == "rust" ]]; then
@@ -530,8 +500,6 @@ function outdated () {
             up_py
         elif [[ $2 == "npm" ]]; then
             up_npm
-        elif [[ $2 == "pip" ]]; then
-            up_pip
         elif [[ $2 == "homebrew" || $2 == "brew" ]]; then
             up_brew
         elif [[ $2 == "rust" ]]; then
