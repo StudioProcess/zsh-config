@@ -173,6 +173,10 @@ function quote () {
 }
 
 # https://gist.github.com/jaytaylor/6527607
+# TODO: only supports `timeout SECONDS command`: unit suffixes are silently dropped (`timeout 1m …` stops
+#       after 1 second!), no options like -k/--signal, no exit code 124 on timeout. It would also shadow
+#       a real `timeout` command if one gets installed, also in tools that replay this shell's functions.
+#       Rename it, or fall back to the real one if installed.
 function timeout() { perl -e 'alarm shift; exec @ARGV' "$@"; }
 
 function motd () {
@@ -539,6 +543,9 @@ function outdated () {
 }
 
 # Hexdump
+# TODO: shadows /usr/bin/hexdump with a different interface (`hexdump file [lines]`), so the standard
+#       `hexdump -C file` fails ("bad math expression"), also in tools that replay this shell's functions.
+#       Rename it (e.g. `hd`), or fall back to `command hexdump` when the first argument is an option.
 function hexdump () {
     if [[ -z "$1" ]]; then
         echo "Usage:"
