@@ -3,6 +3,21 @@
 # https://medium.com/@ahadsheriff/how-to-get-a-better-development-experience-on-your-mac-8478be58bba4
 
 
+# set up homebrew environment in ~/.zprofile (if brew is installed, but not set up there yet)
+# Note: Apple Silicon only (Homebrew in /opt/homebrew)
+if [[ -x /opt/homebrew/bin/brew ]]; then
+    if ! grep -qs "brew shellenv" ~/.zprofile; then
+        print -P "%F{yellow}Note: Adding Homebrew setup to ~/.zprofile%f"
+        {
+            echo
+            echo "# Homebrew (added by zsh-config)"
+            echo 'eval "$(/opt/homebrew/bin/brew shellenv zsh)"'
+        } >> ~/.zprofile
+    fi
+    # ~/.zprofile has already run for this shell, so set up homebrew now if needed
+    which brew > /dev/null || eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+fi
+
 # check for homebrew
 if which brew > /dev/null; then
     # check for chroma (needed for colored cat/less/hexdump)
@@ -16,11 +31,6 @@ fi
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export EDITOR='nova'
-# Note: homebrew bins are linked from /usr/local/bin, which is already in the path
-# PATH="$(brew --prefix)/bin:$PATH"
-export PATH="/usr/local/sbin:$PATH"
-export PATH="$(brew --prefix python@3)libexec/bin:$PATH" # python3 unversioned symlinks (from homebrew)
-export PATH="$(brew --prefix rustup)/bin:$PATH" # rust toolchain (via rustup)
 
 # Setup pyenv (if installed)
 which pyenv > /dev/null 2>&1
@@ -630,8 +640,6 @@ switchvenv_init
 # --------------------------------------
 # AUTOMATICALLY UPDATED BELOW THIS POINT
 # --------------------------------------
-
-export PATH="/usr/local/opt/openssl@3/bin:$PATH"
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
