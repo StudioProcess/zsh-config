@@ -57,9 +57,15 @@ source ~/.znap/zsh-snap/znap.zsh  # Start Znap
 znap source sindresorhus/pure async.zsh pure.zsh
 # znap prompt sindresorhus/pure # fast prompt (needs to be put after motd though)
 
-# add exit code to prompt (if non-zero) → breaks pwd display in pure prompt
-# _PROMPT_NEWLINE=$'\n' # workaround to get newline within prompt
-# PROMPT='%(?.%F{magenta}.%F{red}%?${_PROMPT_NEWLINE})❯%f '
+# show the exit code of the last command (if non-zero) at the end of pure's first prompt line
+# Note: don't set PROMPT directly: pure builds the whole prompt (including the path), so that would remove it.
+# Pure's own hook prompt_pure_precustom sets the custom suffix (psvar[23]) instead.
+function prompt_exit_status_save () { prompt_exit_status=$?; }
+precmd_functions=(prompt_exit_status_save $precmd_functions) # run first, before other hooks change $?
+function prompt_pure_precustom () {
+    (( prompt_exit_status )) && psvar[23]="(exit $prompt_exit_status)"
+}
+zstyle :prompt:pure:custom:suffix color red
 
 # plugins
 znap source zsh-users/zsh-autosuggestions
