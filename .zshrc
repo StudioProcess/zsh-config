@@ -147,14 +147,13 @@ function new () {
 \ \ "engines": {\
 \ \ \ \ "node": "^'$node'",\
 \ \ \ \ "npm": "^'$(npm -v)'"\
-\ \ }\
+\ \ }
 ' package.json
         # node major version for fnm, which switches to it when entering the folder
         # (major only, like the ^ in engines: any installed 26.x.x matches "26")
         echo "${node%%.*}" > .node-version
         echo "node_modules\n.DS_Store\n__pycache__\nvenv\n.venv" > .gitignore
-        git init 1>/dev/null
-        sed -i '' 's/master/main/g' .git/HEAD # rename master to main
+        git init -b main 1>/dev/null
     fi
 }
 
