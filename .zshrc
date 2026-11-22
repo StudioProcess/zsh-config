@@ -62,12 +62,6 @@ znap source sindresorhus/pure async.zsh pure.zsh
 # plugins
 znap source zsh-users/zsh-syntax-highlighting
 znap source zsh-users/zsh-autosuggestions
-
-# znap source MichaelAquilina/zsh-autoswitch-virtualenv
-#export AUTOSWITCH_VIRTUAL_ENV_DIR="./venv" # store virtualenvs in each project folder
-## export AUTOSWITCH_VIRTUAL_ENV_DIR="." # store virtualenvs in each project folder
-## export AUTOSWITCH_VIRTUAL_ENV_NAME="venv"
-
 # oh-my-zsh plugins
 znap source ohmyzsh/ohmyzsh lib/theme-and-appearance # required libraries for the following plugins
 znap source ohmyzsh/ohmyzsh plugins/colored-man-pages
@@ -76,11 +70,9 @@ ZSH_COLORIZE_TOOL=chroma # use chroma, even if pygments is installed too
 znap source ohmyzsh/ohmyzsh plugins/common-aliases
 
 
-
 # OPTIONS
 setopt auto_cd # cd by just typing the folder name
 # setopt auto_pushd pushd_ignore_dups setopt pushd_minus
-
 
 
 # ALIASES
@@ -116,7 +108,6 @@ alias home='cd ~'
 alias lanip="ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'" #https://stackoverflow.com/a/13322549
 alias wanip='curl http://ipecho.net/plain; echo'
 alias edit="$EDITOR"
-
 
 
 # FUNCTIONS
@@ -183,79 +174,88 @@ function motd () {
     /bin/cat ~/.motd
 }
 
-# Autoswitch python venv
-# Looks in $VENV_DIR and one subdirectory deep for pyvenv.cfg
-VENV_DIR='venv'
+# Python virtual environments (via uv)
+# A venv is a folder named .venv (uv's default) or venv (older projects) containing a pyvenv.cfg.
+# It is activated automatically when entering the project folder (or any of its subfolders),
+# and deactivated when leaving it.
+VENV_NAMES=(.venv venv)
 GRAY="\033[2;37m"
 NC="\033[0m"
-function mkvenv () {
-    if [[ -f "$PWD/$VENV_DIR/pyvenv.cfg" ]]; then
-        echo "venv already present: ${GRAY}$PWD/$VENV_DIR${NC}"
-        return
-    fi
-    if [[ $HAS_PYENV ]]; then
-        if [[ -n "$1" ]]; then
-            py_version="$1"
-        else
-            py_version=$(pyenv global)
-        fi
-        # check if requested version is installed
-        available_version=$(pyenv latest $py_version 2> /dev/null)
-        if [[ $? -ne 0 ]]; then
-            # not installed; check if version is available
-            install_version=$(pyenv latest --known $py_version 2> /dev/null)
-            if [[ $? -ne 0 ]]; then
-                echo "Python version not available: $py_version"
-                return 1
+
+# Print the path of the nearest venv, searching the current folder and then its parent folders
+function findvenv () {
+    local dir=$PWD name
+    while true; do
+        for name in $VENV_NAMES; do
+            if [[ -f "$dir/$name/pyvenv.cfg" ]]; then
+                echo "$dir/$name"
+                return 0
             fi
-            echo "Installing python version: $install_version"
-            pyenv install $install_version
-            echo "Using python version: $install_version"
-        else
-            echo "Using python version: $available_version"
-        fi
-        
-        pyenv local $py_version # set the version given, not the actual installed one
-    fi
-    echo "Creating venv: ${GRAY}$PWD/$VENV_DIR${NC}"
-    python -m venv $VENV_DIR
-    if [[ -f "$PWD/$VENV_DIR/pyvenv.cfg" ]]; then
-        echo "Activating venv: ${GRAY}$PWD/$VENV_DIR${NC}";
-        source $PWD/$VENV_DIR/bin/activate
-    fi
-}
-function rmvenv () {
-    for venv_dir in $VENV_DIR $VENV_DIR/*(N); do
-        if [[ -f "$PWD/$venv_dir/pyvenv.cfg" ]]; then
-            if [[ -n $VIRTUAL_ENV ]]; then
-                echo "Deactivating venv: ${GRAY}$VIRTUAL_ENV${NC}";
-                deactivate
-            fi
-            echo "Removing venv: ${GRAY}$PWD/$venv_dir${NC}"
-            rm -rf $PWD/$venv_dir
-        fi
+        done
+        [[ $dir == / ]] && return 1
+        dir=${dir:h} # parent folder
     done
 }
-function switchvenv () {
-    if [[ -n $VIRTUAL_ENV ]]; then
-        # a virtual env is already activated
-        local DIR=$(dirname $VIRTUAL_ENV) # parnt directory of the venv
-        # if we are in a subdirectory of $DIR do nothing; we are already activated
-        if [[ $PWD == $DIR || $PWD == $DIR/* ]]; then
-            # echo 'already activated'
-            return
+
+# Create a venv in the current folder (and activate it)
+# Usage: mkvenv [python-version] (e.g. `mkvenv 3.14`; the version is pinned in .python-version)
+# Without a version, an existing .python-version is used, or the default version (e.g. 3.15) is pinned
+function mkvenv () {
+    local name
+    for name in $VENV_NAMES; do
+        if [[ -f "$PWD/$name/pyvenv.cfg" ]]; then
+            echo "venv already present: ${GRAY}$PWD/$name${NC}"
+            return 1
         fi
-        # we are not in a directory of the activated env; deactivate
-        echo "Deactivating venv: ${GRAY}$VIRTUAL_ENV${NC}";
+    done
+    if [[ -n "$1" ]]; then
+        uv python pin "$1" || return 1 # writes .python-version
+    elif [[ ! -f .python-version ]]; then
+        # pin the minor version of the python uv would use here (e.g. 3.15.2 → 3.15)
+        local version
+        version=$(uv python find --show-version) || return 1
+        uv python pin "${version%.*}" || return 1
+    fi
+    echo "Creating venv: ${GRAY}$PWD/.venv${NC}"
+    if [[ -f pyproject.toml ]]; then
+        uv sync --quiet || return 1 # uv project: create .venv and install its dependencies
+    else
+        uv venv --quiet || return 1 # uses the version from .python-version (if present)
+    fi
+    switchvenv
+}
+
+# Remove the venv in the current folder (and deactivate it)
+function rmvenv () {
+    local name venv
+    for name in $VENV_NAMES; do
+        venv="$PWD/$name"
+        if [[ -f "$venv/pyvenv.cfg" ]]; then
+            if [[ $VIRTUAL_ENV == "$venv" ]] && (( $+functions[deactivate] )); then
+                echo "Deactivating venv: ${GRAY}$venv${NC}"
+                deactivate
+            fi
+            echo "Removing venv: ${GRAY}$venv${NC}"
+            rm -rf "$venv"
+            return 0
+        fi
+    done
+    echo "No venv in the current folder"
+    return 1
+}
+
+# Activate the nearest venv (if it isn't active yet), or deactivate when we left the project
+function switchvenv () {
+    local venv=$(findvenv)
+    [[ $venv == "$VIRTUAL_ENV" ]] && return # already active (or no venv and none active)
+    if [[ -n $VIRTUAL_ENV ]] && (( $+functions[deactivate] )); then
+        echo "Deactivating venv: ${GRAY}$VIRTUAL_ENV${NC}"
         deactivate
     fi
-    for venv_dir in $VENV_DIR $VENV_DIR/*(N); do # the N supresses an error when no expansion can't be found (nullglob)
-        if [[ -f "$PWD/$venv_dir/pyvenv.cfg" ]]; then
-            echo "Activating venv: ${GRAY}$PWD/$venv_dir${NC}";
-            source $PWD/$venv_dir/bin/activate
-            break
-        fi
-    done;
+    if [[ -n $venv ]]; then
+        source "$venv/bin/activate"
+        echo "Activating venv: ${GRAY}$venv ($(python --version))${NC}"
+    fi
 }
 function switchvenv_first() {
     add-zsh-hook -D precmd switchvenv_first
@@ -620,20 +620,3 @@ switchvenv_init
 # --------------------------------------
 # AUTOMATICALLY UPDATED BELOW THIS POINT
 # --------------------------------------
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/Users/mlg/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/Users/mlg/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "/Users/mlg/miniconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="/Users/mlg/miniconda3/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
-# Added by Antigravity IDE
-export PATH="/Users/mlg/.antigravity-ide/antigravity-ide/bin:$PATH"
