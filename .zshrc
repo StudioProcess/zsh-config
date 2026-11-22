@@ -28,7 +28,9 @@ fi
 
 
 # VARIABLES
-export LC_ALL=en_US.UTF-8
+# Locale (UTF-8, English): the fallback for all LC_* categories (encoding, sorting, date formats, …)
+# Terminal.app would set LANG from the system's language and region, but en_AT.UTF-8 doesn't exist;
+# other terminals might not set it at all. Individual categories can still be overridden, e.g. LC_TIME.
 export LANG=en_US.UTF-8
 export EDITOR='nova'
 
