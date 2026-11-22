@@ -37,6 +37,10 @@ export EDITOR='nova'
 typeset -U path # remove duplicate entries from PATH (keeps the first one)
 [[ -d ~/.local/bin ]] && path=(~/.local/bin $path)
 
+# fnm (node version manager): put node/npm on the PATH,
+# and switch versions automatically in folders with a .nvmrc or .node-version file
+which fnm > /dev/null && eval "$(fnm env --use-on-cd --shell zsh)"
+
 
 # PLUGINS
 # Download Znap, if it's not there yet.
@@ -145,6 +149,9 @@ function new () {
 \ \ \ \ "npm": "^'$(npm -v)'"\
 \ \ }\
 ' package.json
+        # node major version for fnm, which switches to it when entering the folder
+        # (major only, like the ^ in engines: any installed 26.x.x matches "26")
+        echo "${node%%.*}" > .node-version
         echo "node_modules\n.DS_Store\n__pycache__\nvenv\n.venv" > .gitignore
         git init 1>/dev/null
         sed -i '' 's/master/main/g' .git/HEAD # rename master to main
@@ -266,8 +273,8 @@ function outdated () {
     FN_NAME=$0
     
     function check_node() {
-        which n > /dev/null 2>&1 || {
-            [[ $1 != "nowarn" ]] && echo "node (n) is not installed"
+        which fnm > /dev/null 2>&1 || {
+            [[ $1 != "nowarn" ]] && echo "node (fnm) is not installed"
             return 1
         }
     }
@@ -300,19 +307,24 @@ function outdated () {
         }
     }
     
-    ## node
+    ## node (via fnm)
     function out_node() {
         check_node $1 || return 1
         echo "node"
         echo "-------------------"
-        node_current=${"$(node -v)":1} # remove leading 'v'
-        node_latest=$(n lsr lts)
+        # current: fnm's default version (not `node -v`, which can be a per-project version via --use-on-cd)
+        node_current=$(fnm default 2>/dev/null) # e.g. "v26.13.1"
+        node_current=${node_current#v}
+        [[ -z $node_current ]] && node_current="none"
+        # latest: newest LTS release, e.g. "v26.13.1 (Lithium)"
+        node_latest=$(fnm ls-remote --lts --latest | sed -E 's/^v([0-9.]+).*/\1/')
         if [[ $node_current == $node_latest ]]; then
             echo "✅          $node_current"
         else
             echo "Latest LTS: $node_latest"
             echo "Current:    $node_current"
-            export _outdated_update_node="n lts --preserve"
+            # install, make it the default for new shells, and use it in this shell
+            export _outdated_update_node="fnm install $node_latest && fnm default $node_latest && fnm use $node_latest"
             if [[ $1 != "noupcmd" ]]; then
                 echo "🔄 Update with \`$FN_NAME update node\` (or \`$_outdated_update_node\`)"
             fi
