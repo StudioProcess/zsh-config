@@ -70,6 +70,13 @@ znap source ohmyzsh/ohmyzsh plugins/colored-man-pages
 znap source ohmyzsh/ohmyzsh plugins/colorize # needs `pygments` or `chroma`. Installs `ccat` and `cless`
 ZSH_COLORIZE_TOOL=chroma # use chroma, even if pygments is installed too
 znap source ohmyzsh/ohmyzsh plugins/common-aliases
+# Fix 'common-aliases' `-i` aliases
+# rm/cp/mv: ask before deleting/overwriting , but only when there's a terminal to answer;
+# without one (tools, scripts), the question can't be answered and would silently count as "no"
+unalias rm cp mv 2> /dev/null
+function rm () { if [[ -t 0 ]]; then command rm -i "$@"; else command rm "$@"; fi; }
+function cp () { if [[ -t 0 ]]; then command cp -i "$@"; else command cp "$@"; fi; }
+function mv () { if [[ -t 0 ]]; then command mv -i "$@"; else command mv "$@"; fi; }
 
 
 # OPTIONS
