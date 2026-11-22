@@ -55,7 +55,7 @@ source ~/.znap/zsh-snap/znap.zsh  # Start Znap
 
 # pure prompt
 znap source sindresorhus/pure async.zsh pure.zsh
-# znap prompt sindresorhus/pure # fast prompt (needs to be put after modt though)
+# znap prompt sindresorhus/pure # fast prompt (needs to be put after motd though)
 
 # add exit code to prompt (if non-zero) → breaks pwd display in pure prompt
 # _PROMPT_NEWLINE=$'\n' # workaround to get newline within prompt
@@ -181,7 +181,7 @@ function timeout() { perl -e 'alarm shift; exec @ARGV' "$@"; }
 
 function motd () {
     local TD MD new_quote
-    TD=$(date -r ~/.motd +%s 2>/dev/null || echo 0) # touch date in seconds (or 0 if date fails i.e. file doesn't exit)
+    TD=$(date -r ~/.motd +%s 2>/dev/null || echo 0) # touch date in seconds (or 0 if date fails i.e. file doesn't exist)
     MD=$(date -v 0H -v 0M -v 0S +%s) # midnight date in seconds
     if (( TD < MD )) || [[ "$1" == "-f" ]]; then # (( )) compares numbers ([[ < ]] would compare strings)
         new_quote=$(quote 3) # get new quote (timeout 3 seconds)
