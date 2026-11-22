@@ -1,16 +1,15 @@
-# 2020-09-24, 2020-09-18, 2020-01-21, 2022-03-09, 2022-07-06, 2022-08-30, 2022-11-07, 2023-02-17, 2023-03-21
+# 2020-09-24, 2020-09-18, 2020-01-21, 2022-03-09, 2022-07-06, 2022-08-30, 2022-11-07, 2023-02-17, 2023-03-21, 2026-11-22
 # Plugin selection mainly from:
 # https://medium.com/@ahadsheriff/how-to-get-a-better-development-experience-on-your-mac-8478be58bba4
-#
-# Requirements
-# pygments (for colorize): brew install pygments
 
 
-# install homebrew if necessary (https://brew.sh)
-which brew > /dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# install pygments if necessary
-which pygmentize > /dev/null || brew install pygments
+# check for homebrew
+if which brew > /dev/null; then
+    # check for chroma (needed for colored cat/less/hexdump)
+    which chroma > /dev/null || print -P "%F{yellow}Note: chroma is not installed (needed for colored cat/less). Install it with: brew install chroma%f"
+else
+    print -P "%F{yellow}Note: Homebrew (brew) is not installed. Install it from https://brew.sh%f"
+fi
 
 
 # VARIABLES
@@ -34,9 +33,11 @@ fi
 
 # PLUGINS
 # Download Znap, if it's not there yet.
-[[ -f ~/.znap/zsh-snap/znap.zsh ]] ||
+if [[ ! -f ~/.znap/zsh-snap/znap.zsh ]]; then
+    print -P "%F{yellow}Installing Znap (zsh plugin manager) to ~/.znap/zsh-snap%f"
     git clone --depth 1 -- \
         https://github.com/marlonrichert/zsh-snap.git ~/.znap/zsh-snap
+fi
 source ~/.znap/zsh-snap/znap.zsh  # Start Znap
 
 # pure prompt
@@ -59,7 +60,8 @@ znap source zsh-users/zsh-autosuggestions
 # oh-my-zsh plugins
 znap source ohmyzsh/ohmyzsh lib/theme-and-appearance # required libraries for the following plugins
 znap source ohmyzsh/ohmyzsh plugins/colored-man-pages
-znap source ohmyzsh/ohmyzsh plugins/colorize
+znap source ohmyzsh/ohmyzsh plugins/colorize # needs `pygments` or `chroma`. Installs `ccat` and `cless`
+ZSH_COLORIZE_TOOL=chroma # use chroma, even if pygments is installed too
 znap source ohmyzsh/ohmyzsh plugins/common-aliases
 
 
@@ -76,18 +78,23 @@ alias ls='ls -G' # colored ls
 # Tools (e.g. Claude Code, IDEs) snapshot this shell's aliases/functions and replay them
 # non-interactively, where colorize_cat breaks (it ignores file args when stdin isn't a tty).
 # These are functions (not aliases) so the check happens at call time.
+# Requires `colorize_cat`/`colorize_less` (functions from the colorize plugin) and `chroma` (brew install chroma).
+# Note: call the functions, not the plugin's `ccat`/`cless` aliases. Znap compiles this file
+# (~/.zshrc.zwc) before the plugin is loaded, so aliases inside function bodies never get expanded.
 function cat () {
-    # colorize only if: stdout is a tty, colorize is available, no options given (e.g. -n),
-    # and input is either files (stdin is a tty) or piped stdin (no file args)
-    if [[ -t 1 ]] && (( $+functions[colorize_cat] )) && [[ "$*" != (|* )-* ]] \
-        && { [[ -t 0 && $# -gt 0 ]] || [[ ! -t 0 && $# -eq 0 ]] }; then
-        colorize_cat "$@"
-    else
-        command cat "$@"
+    # colorize only if: stdout is a tty, no options given (e.g. -n), colorize_cat and chroma are available
+    # (checking $1 is enough: macOS cat only accepts options before file names)
+    if [[ -t 1 && "$1" != -* ]] && which colorize_cat chroma > /dev/null; then
+        # colorize_cat reads either files (stdin is a tty) or piped stdin (no file args), not both
+        if [[ -t 0 && $# -gt 0 ]] || [[ ! -t 0 && $# -eq 0 ]]; then
+            colorize_cat "$@"
+            return
+        fi
     fi
+    command cat "$@"
 }
 function less () {
-    if [[ -t 1 ]] && (( $+functions[colorize_less] )); then
+    if [[ -t 1 ]] && which colorize_less chroma > /dev/null; then
         colorize_less "$@"
     else
         command less "$@"
@@ -540,11 +547,14 @@ function hexdump () {
         # stdout is a terminal
         local NUM_LINES=20
         [[ -n "$2" ]] && NUM_LINES="$2"
-        # TODO check for pygmentize
+        # highlight with chroma (if available), using the same style as the colorize plugin
+        local highlight=(command cat)
+        which chroma > /dev/null && highlight=(chroma --lexer=hexdump \
+            --style="${ZSH_COLORIZE_STYLE:-emacs}" --formatter="${ZSH_COLORIZE_CHROMA_FORMATTER:-terminal}")
         if [[ $NUM_LINES -eq 0 ]]; then
-            xxd $1 | pygmentize -l hexdump
+            xxd $1 | $highlight
         else
-            xxd $1 | head -n "$NUM_LINES" | pygmentize -l hexdump
+            xxd $1 | head -n "$NUM_LINES" | $highlight
         fi
         [[ -z "$2" ]] && echo "/*\n    Output truncated to $NUM_LINES lines.\n    Specify number of lines as 2nd argument (0 for unlimited).\n    When redirecting to a file (with \'>\'), the whole file is dumped by default.\n*/"
     else
